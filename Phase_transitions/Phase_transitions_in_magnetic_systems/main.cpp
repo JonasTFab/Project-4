@@ -27,5 +27,5 @@ int ising_model(int L, int N){
 }
 
 int main(int argc, char* argv[]){
-
+std::cout << spin() << std::endl;
 }
