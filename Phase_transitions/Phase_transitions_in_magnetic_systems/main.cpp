@@ -3,12 +3,18 @@
 #include <iomanip>
 #include <armadillo>
 #include <cstdlib>
+#include <random>
 double J = 1;
+std::mt19937 generator (time(NULL));
 
 int spin(){ //generate random spins up or down
-    double divide = 0.5;
-    double ran_nr = rand()/RAND_MAX;
-    if (ran_nr < divide){
+  //srand(time(NULL));// seed random number generator with the time now
+  std::uniform_real_distribution<double> dis(0.0, 1.0);
+  double ran_nr = dis(generator);
+  double divide = 0.5;
+  //double inverse_period = RAND_MAX;
+  //double ran_nr = rand()/inverse_period;
+  if (ran_nr < divide){
         return -1;
     }
     else {
@@ -27,5 +33,6 @@ int ising_model(int L, int N){
 }
 
 int main(int argc, char* argv[]){
-std::cout << spin() << std::endl;
-}
+
+  }
+  }
