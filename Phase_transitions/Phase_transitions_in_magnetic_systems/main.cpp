@@ -21,17 +21,63 @@ int spin(){ //generate random spins up or down with mersenne twister
       }
 } // end of function ran()
 
-
-int ising_model(int L, int N){
-
-  double energy = 0;
-  for(int j = 1; j < N; j++){
-
+//we want a sample mean
+//sample eror
+double system(int L){
+  arma::Mat<double> spin_matrix = arma::mat(L, L);
+  for (int i = 0; i < L; i++){
+    for(int j = 0; j < L; j++){
+      spin_matrix(i,j) = spin();
+    }
   }
+  std::cout << spin_matrix << "\n";
+  return 0;
+}
+
+int ising_model(int L, arma::mat spin_matrix){
+  double energy = 0;
+  for (int i = 0; i < L; i++){
+    for(int j = 0; j < L; j++){
+    energy += spin_matrix(i,j)*(spin_matrix(i-1,j)+spin_matrix(i,j-1)+spin_matrix(i+1,j)+spin_matrix(i,j+1));
+
+    }
+  }
+  energy *= -J;
   return 0;
 }
 
 int main(int argc, char* argv[]){
+  int N;
+  int L;
+  std::cout << "chose lattice length L. N = LXL: L= ";
+  std::cin >> L;
+  system(L);
+  }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* JUNK
+
+  if(std::floor(N)!=std::ceil(N)){
+    std::cout << "Bad Usage: " << N <<
+    "Not an integer" << std::endl;
+    exit(1);
+    }
+  else{
+    ;
   }
-  }
+*/
