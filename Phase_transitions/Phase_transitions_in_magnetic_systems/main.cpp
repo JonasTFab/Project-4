@@ -14,7 +14,10 @@ std::mt19937 generator (time(NULL)); //seed rng with time now
 inline int periodic(int i, int limit, int add) {
 return (i+limit+add) % (limit);
 }
-
+//inline function for computing heat capacity at constant volume
+inline double C_V(double T,mean_E){
+return 1/(k_b*T*T)*(mean_E*mean_E)
+}
 int spin(){ //generate random spins up or down with mersenne twister
   std::uniform_real_distribution<double> dis(0.0, 1.0);
   double ran_nr = dis(generator);
@@ -29,7 +32,7 @@ int spin(){ //generate random spins up or down with mersenne twister
       }
 } // end of function ran()
 
-arma::Mat<double> spin_system(int L){ //set up the lattice of spins
+arma::Mat<double> spin_system(int L){ //set up the lattice of spins with random spins up or down
   arma::Mat<double> spin_matrix = arma::mat(L, L);
   for (int i = 0; i < L; i++){
     for(int j = 0; j < L; j++){
@@ -42,14 +45,16 @@ arma::Mat<double> spin_system(int L){ //set up the lattice of spins
 
 int ising_model(int L, arma::mat spin_matrix){
   double energy = 0;
+  int N = L*L;
   for (int i = 0; i < L; i++){
     for(int j = 0; j < L; j++){
     energy -= spin_matrix(i,j)*(spin_matrix(periodic(i,L,-1),j) + spin_matrix(i,periodic(j,L,-1))); //*(spin_matrix(i-1,j)+spin_matrix(i,j-1)+spin_matrix(i+1,j)+spin_matrix(i,j+1));//J = 1
     std::cout << energy << std::endl;
     }
+    double mean_energy = energy/N;
   }
   //std::cout << energy << std::endl;
-  return 0;
+  return mean_energy;
 }
 
 int main(int argc, char* argv[]){
@@ -57,6 +62,8 @@ int main(int argc, char* argv[]){
   int L;
   std::cout << "chose lattice length L. N = LXL: L= ";
   std::cin >> L;
+  N = L*L
+  M = pow(2,N)
   arma::Mat<double> matrix = spin_system(L);
   ising_model(L,matrix);
   }
