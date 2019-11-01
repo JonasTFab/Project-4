@@ -5,10 +5,9 @@
 #include <cstdlib>
 #include <random>
 double J = 1;
-std::mt19937 generator (time(NULL));
+std::mt19937 generator (time(NULL)); //seed rng with time now
 
-int spin(){ //generate random spins up or down
-  //srand(time(NULL));// seed random number generator with the time now
+int spin(){ //generate random spins up or down with mersenne twister
   std::uniform_real_distribution<double> dis(0.0, 1.0);
   double ran_nr = dis(generator);
   double divide = 0.5;
