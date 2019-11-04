@@ -56,13 +56,11 @@ int ising_model(int L, double T, arma::mat spin_matrix){
   int M = pow(2,N);
   double beta = 1/(k_b*T);
   arma::Mat<double> w = arma::vec(5);
-
   for (int x = 0; x < L; x++){
     for(int y = 0; y < L; y++){
     energy -= spin_matrix(x,y)*(spin_matrix(periodic(x,L,-1),y) + spin_matrix(x,periodic(y,L,-1))); //*(spin_matrix(i-1,j)+spin_matrix(i,j-1)+spin_matrix(i+1,j)+spin_matrix(i,j+1));//J = 1
     }
   }
-  std::cout << energy << std::endl;
   double mean_energy = energy/N;
   double Z = (2*exp(-8)+exp(8) + 12);
   for (int i = 0; i < 5; i++){
@@ -71,12 +69,8 @@ int ising_model(int L, double T, arma::mat spin_matrix){
     int random_y = dis(generator);//random j index to flip
     arma::Mat<double> new_spin_matrix = spin_matrix;
     new_spin_matrix(random_x,random_y) *= (-1);//new lattice with one randomly flipped spin
-    for (int x = 0; x < L; x++){
-      for(int y = 0; y < L; y++){
-      new_energy -= new_spin_matrix(x,y)*(new_spin_matrix(periodic(x,L,-1),y) + new_spin_matrix(x,periodic(y,L,-1))); //*(spin_matrix(i-1,j)+spin_matrix(i,j-1)+spin_matrix(i+1,j)+spin_matrix(i,j+1));//J = 1
-      }
-    }
-    double delta_energy = new_energy-energy;
+    new_energy = new_spin_matrix(random_x,random_y)*(new_spin_matrix(periodic(random_x,L,-1),random_y) + new_spin_matrix(periodic(random_x,L,1),random_y) + new_spin_matrix(random_x,periodic(random_y,L,-1))+new_spin_matrix(random_x,periodic(random_y,L,1)));
+    double delta_energy = new_energy+energy;
     if (delta_energy<= 0){
       energy = new_energy;
     }
