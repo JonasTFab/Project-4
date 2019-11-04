@@ -4,7 +4,11 @@
 #include <armadillo>
 #include <cstdlib>
 #include <random>
+//For debugging:
 // compile with: g++ main.cpp -o main1 -larmadillo -llapack -lblas
+// execute with ./main1 length temperature
+
+//For paralellization
 //mpicxx  -o main_mpi.x  main.cpp -std=c++11
 //mpiexec -n 2 ./main_mpi.x 8
 double J = 1;
@@ -46,24 +50,42 @@ arma::Mat<double> spin_system(int L){ //set up the lattice of spins with random 
 }
 
 int ising_model(int L, double T, arma::mat spin_matrix){
+  std::uniform_real_distribution<double> dis(-1, L); //chose a random spin to flip
   double energy = 0;
   int N = L*L;
   int M = pow(2,N);
   double beta = 1/(k_b*T);
+  arma::Mat<double> w = arma::vec(5);
 
-  for (int i = 0; i < L; i++){
-    for(int j = 0; j < L; j++){
-    energy -= spin_matrix(i,j)*(spin_matrix(periodic(i,L,-1),j) + spin_matrix(i,periodic(j,L,-1))); //*(spin_matrix(i-1,j)+spin_matrix(i,j-1)+spin_matrix(i+1,j)+spin_matrix(i,j+1));//J = 1
+  for (int x = 0; x < L; x++){
+    for(int y = 0; y < L; y++){
+    energy -= spin_matrix(x,y)*(spin_matrix(periodic(x,L,-1),y) + spin_matrix(x,periodic(y,L,-1))); //*(spin_matrix(i-1,j)+spin_matrix(i,j-1)+spin_matrix(i+1,j)+spin_matrix(i,j+1));//J = 1
     }
   }
-  std::cout <<"Total energy: "<< energy << std::endl;
+  std::cout << energy << std::endl;
   double mean_energy = energy/N;
-  std::cout << "Mean energy per particle: " << mean_energy << std::endl;
   double Z = (2*exp(-8)+exp(8) + 12);
-  double magnetization;
+  for (int i = 0; i < 5; i++){
+    double new_energy = 0;
+    int random_x = dis(generator);//random i index to flip
+    int random_y = dis(generator);//random j index to flip
+    arma::Mat<double> new_spin_matrix = spin_matrix;
+    new_spin_matrix(random_x,random_y) *= (-1);//new lattice with one randomly flipped spin
+    for (int x = 0; x < L; x++){
+      for(int y = 0; y < L; y++){
+      new_energy -= new_spin_matrix(x,y)*(new_spin_matrix(periodic(x,L,-1),y) + new_spin_matrix(x,periodic(y,L,-1))); //*(spin_matrix(i-1,j)+spin_matrix(i,j-1)+spin_matrix(i+1,j)+spin_matrix(i,j+1));//J = 1
+      }
+    }
+    double delta_energy = energy-new_energy;
+    if (delta_energy<= 0){
+      energy = new_energy;
+      std::cout << energy << std::endl;
+    }
+    else{
+      w(i) = exp(-beta*delta_energy);
+    }
+  }
 
-  double mean_magnetization = magnetization;
-  //std::cout << "Z = " << Z << "\n";
   //std::cout << energy << std::endl;
   return mean_energy;
 }
