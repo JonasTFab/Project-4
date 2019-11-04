@@ -6,13 +6,9 @@
 #include <random>
 //For debugging:
 // compile with: g++ main.cpp -o main1 -larmadillo -llapack -lblas
-<<<<<<< HEAD
 // execute with ./main1 length temperature
 
 //For paralellization
-=======
-// excecute with ./main1 length temperature
->>>>>>> 917f120c7ada7566c03ef62fe2970f211fecb311
 //mpicxx  -o main_mpi.x  main.cpp -std=c++11
 //mpiexec -n 2 ./main_mpi.x 8
 double J = 1;
@@ -80,14 +76,14 @@ int ising_model(int L, double T, arma::mat spin_matrix){
       new_energy -= new_spin_matrix(x,y)*(new_spin_matrix(periodic(x,L,-1),y) + new_spin_matrix(x,periodic(y,L,-1))); //*(spin_matrix(i-1,j)+spin_matrix(i,j-1)+spin_matrix(i+1,j)+spin_matrix(i,j+1));//J = 1
       }
     }
-    double delta_energy = energy-new_energy;
+    double delta_energy = new_energy-energy;
     if (delta_energy<= 0){
       energy = new_energy;
-      std::cout << energy << std::endl;
     }
     else{
       w(i) = exp(-beta*delta_energy);
     }
+    std::cout << energy << std::endl;
   }
 
   //std::cout << energy << std::endl;
