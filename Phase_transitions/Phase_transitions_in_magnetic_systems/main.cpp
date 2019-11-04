@@ -6,9 +6,13 @@
 #include <random>
 //For debugging:
 // compile with: g++ main.cpp -o main1 -larmadillo -llapack -lblas
+<<<<<<< HEAD
 // execute with ./main1 length temperature
 
 //For paralellization
+=======
+// excecute with ./main1 length temperature
+>>>>>>> 917f120c7ada7566c03ef62fe2970f211fecb311
 //mpicxx  -o main_mpi.x  main.cpp -std=c++11
 //mpiexec -n 2 ./main_mpi.x 8
 double J = 1;
