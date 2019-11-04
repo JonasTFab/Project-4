@@ -73,22 +73,33 @@ int ising_model(int L, double T, arma::mat spin_matrix){
     int random_y = dis(generator);//random j index to flip
     arma::Mat<double> new_spin_matrix = spin_matrix;
     new_spin_matrix(random_x,random_y) *= (-1);//new lattice with one randomly flipped spin
-    energy = spin_matrix(random_x,random_y)*(spin_matrix(periodic(random_x,L,-1),random_y) + spin_matrix(periodic(random_x,L,1),random_y) + spin_matrix(random_x,periodic(random_y,L,-1))+spin_matrix(random_x,periodic(random_y,L,1)));
-    new_energy = new_spin_matrix(random_x,random_y)*(new_spin_matrix(periodic(random_x,L,-1),random_y) + new_spin_matrix(periodic(random_x,L,1),random_y) + new_spin_matrix(random_x,periodic(random_y,L,-1))+new_spin_matrix(random_x,periodic(random_y,L,1)));
+    energy = spin_matrix(random_x,random_y)*
+    (spin_matrix(periodic(random_x,L,-1),random_y) +
+    spin_matrix(periodic(random_x,L,1),random_y) +
+    spin_matrix(random_x,periodic(random_y,L,-1)) +
+    spin_matrix(random_x,periodic(random_y,L,1)));
+
+    new_energy = new_spin_matrix(random_x,random_y)*
+    (new_spin_matrix(periodic(random_x,L,-1),random_y) +
+    new_spin_matrix(periodic(random_x,L,1),random_y) +
+    new_spin_matrix(random_x,periodic(random_y,L,-1)) +
+    new_spin_matrix(random_x,periodic(random_y,L,1)));
+
     double delta_energy = new_energy-energy;
-    if (delta_energy<= 0){
+
+    if (delta_energy <= 0){
       spin_matrix = new_spin_matrix;
       energy = new_energy;
     }
     else{
       w(i) = exp(-beta*delta_energy); //this can be precalculated, how?
       double r = r_dis(generator);
+      std::cout << w(i) << " " << r << std::endl;
       if (r <= w(i)){
         spin_matrix = new_spin_matrix;
         energy = new_energy;
       }
     }
-    std::cout << energy << std::endl;
   }
 
   //std::cout << energy << std::endl;
