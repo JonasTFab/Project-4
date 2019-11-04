@@ -36,7 +36,7 @@ int spin(){ //generate random spins up or down with mersenne twister
     else {
         return 1;
       }
-} // end of function ran()
+} // end of function spin()
 
 arma::Mat<double> spin_system(int L){ //set up the lattice of spins with random spins up or down
   arma::Mat<double> spin_matrix = arma::mat(L, L);
@@ -47,7 +47,7 @@ arma::Mat<double> spin_system(int L){ //set up the lattice of spins with random 
   }
   std::cout << spin_matrix << "\n";
   return spin_matrix;
-}
+} // end of function spin_system()
 
 int ising_model(int L, double T, arma::mat spin_matrix){
   int number_of_iterations = 100;
@@ -64,7 +64,7 @@ int ising_model(int L, double T, arma::mat spin_matrix){
     }
   }
   double mean_energy = energy/N;
-  double Z = (2*exp(-8)+exp(8) + 12);
+  double Z = (2*exp(-8)+exp(8) + 12);               // NB! Denne gjelder kun for 2x2
 
   //The Metropolis Algorithm and the Two-dimensional Ising Model
   for (int i = 0; i < number_of_iterations; i++){
@@ -104,7 +104,7 @@ int ising_model(int L, double T, arma::mat spin_matrix){
 
   //std::cout << energy << std::endl;
   return mean_energy;
-}
+} // end of function ising_model()
 
 int main(int argc, char* argv[]){
   int N;
