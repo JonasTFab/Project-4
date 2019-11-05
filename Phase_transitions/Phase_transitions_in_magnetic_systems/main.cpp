@@ -66,6 +66,8 @@ int ising_model(int L, double T, arma::mat spin_matrix){
   double mean_energy = energy/N;
   double Z = (2*exp(-8)+exp(8) + 12);               // NB! Denne gjelder kun for 2x2
 
+
+
   //The Metropolis Algorithm and the Two-dimensional Ising Model
   for (int i = 0; i < N; i++){
     double new_energy = 0;
@@ -92,7 +94,7 @@ int ising_model(int L, double T, arma::mat spin_matrix){
     if (r <= w(i)){
       spin_matrix(random_x,random_y) *= (-1);
     }
-    std::cout << energy << std::endl;
+    std::cout << delta_energy << std::endl;
     /*if (delta_energy <= 0){
       spin_matrix = new_spin_matrix;
       energy = new_energy;
