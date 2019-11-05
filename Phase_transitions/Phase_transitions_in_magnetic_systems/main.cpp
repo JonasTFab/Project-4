@@ -105,7 +105,7 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
 
 int main(int argc, char* argv[]){
   int N;
-  int MC_cycles = 100;
+  int MC_cycles = 10;
   int L = atoi(argv[1]);
   double Temp = atof(argv[2]);
   if (argc != 3){
