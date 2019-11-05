@@ -17,7 +17,7 @@ std::mt19937 generator (time(NULL)); //seed rng with time now
 
 // inline function for periodic boundary conditions
 inline int periodic(int i, int limit, int add) {
-return (i+limit+add) % (limit);
+  return (i+limit+add) % (limit);
 }
 //inline function for computing heat capacity at constant volume
 //inline double C_V(double T,mean_E){
@@ -57,7 +57,14 @@ int ising_model(int L, double T, arma::mat spin_matrix){
   int N = L*L;
   int M = pow(2,N);
   double beta = 1/(k_b*T);
-  arma::Mat<double> w = arma::vec(N);
+  arma::Mat<double> w = arma::vec(M+1);
+
+  // Sjekk Coding energy differences på side 16 i statphys
+  for (int i=0; i<=M; i++){
+    w(i) = -8*J + 16*i/M;
+  }
+  std::cout << "w: " << w << std::endl;
+
   for (int x = 0; x < L; x++){
     for(int y = 0; y < L; y++){
     energy -= spin_matrix(x,y)*(spin_matrix(periodic(x,L,-1),y) + spin_matrix(x,periodic(y,L,-1))); //*(spin_matrix(i-1,j)+spin_matrix(i,j-1)+spin_matrix(i+1,j)+spin_matrix(i,j+1));//J = 1
@@ -65,6 +72,18 @@ int ising_model(int L, double T, arma::mat spin_matrix){
   }
   double mean_energy = energy/N;
   double Z = (2*exp(-8)+exp(8) + 12);               // NB! Denne gjelder kun for 2x2
+
+
+  // Mean absolute value of the magnetization,
+  // Spesific heat capacity C_V and Suscecbtibility
+  // using analytical solutions
+  double mean_mag = arma::accu(abs(spin_matrix))/N;
+  double C_v = J / (k_b*T*T);
+  double chi = 1 / (k_b*T);
+
+  std::cout << "Analytic mean magnetization:      " << mean_mag << std::endl;
+  std::cout << "Analytic specific heat capacity:  " << C_v << std::endl;
+  std::cout << "Analytic suscecbtibility:         " << chi << std::endl;
 
 
 
@@ -76,7 +95,7 @@ int ising_model(int L, double T, arma::mat spin_matrix){
     arma::Mat<double> new_spin_matrix = spin_matrix;
     new_spin_matrix(random_x,random_y) *= (-1);//new lattice with one randomly flipped spin
 
-    energy = spin_matrix(random_x,random_y)*
+    energy = spin_matrix(random_x,random_y) *
     (spin_matrix(periodic(random_x,L,-1),random_y) +
     spin_matrix(periodic(random_x,L,1),random_y) +
     spin_matrix(random_x,periodic(random_y,L,-1)) +
@@ -89,12 +108,19 @@ int ising_model(int L, double T, arma::mat spin_matrix){
     new_spin_matrix(random_x,periodic(random_y,L,1)));*/
 
     double delta_energy = 2*energy;//-energy;
-    w(i) = exp(-beta*delta_energy); //this can be precalculated, how?
-    double r = r_dis(generator);
-    if (r <= w(i)){
+    if (delta_energy <= 0){
       spin_matrix(random_x,random_y) *= (-1);
     }
-    std::cout << delta_energy << std::endl;
+    else{
+      w(i) = exp(-beta*delta_energy); //this can be precalculated, how?
+      double r = r_dis(generator);
+      if (r <= w(i)){
+        spin_matrix(random_x,random_y) *= (-1);
+      }
+
+    }
+
+    //std::cout << energy << std::endl;
     /*if (delta_energy <= 0){
       spin_matrix = new_spin_matrix;
       energy = new_energy;
