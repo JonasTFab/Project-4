@@ -57,7 +57,7 @@ int ising_model(int L, double T, arma::mat spin_matrix){
   int N = L*L;
   int M = pow(2,N);
   double beta = 1/(k_b*T);
-  arma::Mat<double> w = arma::vec(number_of_iterations);
+  arma::Mat<double> w = arma::vec(N);
   for (int x = 0; x < L; x++){
     for(int y = 0; y < L; y++){
     energy -= spin_matrix(x,y)*(spin_matrix(periodic(x,L,-1),y) + spin_matrix(x,periodic(y,L,-1))); //*(spin_matrix(i-1,j)+spin_matrix(i,j-1)+spin_matrix(i+1,j)+spin_matrix(i,j+1));//J = 1
@@ -67,40 +67,47 @@ int ising_model(int L, double T, arma::mat spin_matrix){
   double Z = (2*exp(-8)+exp(8) + 12);               // NB! Denne gjelder kun for 2x2
 
   //The Metropolis Algorithm and the Two-dimensional Ising Model
-  for (int i = 0; i < number_of_iterations; i++){
+  for (int i = 0; i < N; i++){
     double new_energy = 0;
     int random_x = dis(generator);//random i index to flip
     int random_y = dis(generator);//random j index to flip
     arma::Mat<double> new_spin_matrix = spin_matrix;
     new_spin_matrix(random_x,random_y) *= (-1);//new lattice with one randomly flipped spin
+
     energy = spin_matrix(random_x,random_y)*
     (spin_matrix(periodic(random_x,L,-1),random_y) +
     spin_matrix(periodic(random_x,L,1),random_y) +
     spin_matrix(random_x,periodic(random_y,L,-1)) +
     spin_matrix(random_x,periodic(random_y,L,1)));
 
-    new_energy = new_spin_matrix(random_x,random_y)*
+    /*new_energy = new_spin_matrix(random_x,random_y)*
     (new_spin_matrix(periodic(random_x,L,-1),random_y) +
     new_spin_matrix(periodic(random_x,L,1),random_y) +
     new_spin_matrix(random_x,periodic(random_y,L,-1)) +
-    new_spin_matrix(random_x,periodic(random_y,L,1)));
+    new_spin_matrix(random_x,periodic(random_y,L,1)));*/
 
-    double delta_energy = new_energy-energy;
-
-    if (delta_energy <= 0){
+    double delta_energy = 2*energy;//-energy;
+    w(i) = exp(-beta*delta_energy); //this can be precalculated, how?
+    double r = r_dis(generator);
+    if (r <= w(i)){
+      spin_matrix(random_x,random_y) *= (-1);
+    }
+    std::cout << energy << std::endl;
+    /*if (delta_energy <= 0){
       spin_matrix = new_spin_matrix;
       energy = new_energy;
     }
     else{
       w(i) = exp(-beta*delta_energy); //this can be precalculated, how?
       double r = r_dis(generator);
-      std::cout << w(i) << " " << r << std::endl;
       if (r <= w(i)){
         spin_matrix = new_spin_matrix;
         energy = new_energy;
       }
     }
-  }
+  std::cout << energy << std::endl;
+*/
+}
 
   //std::cout << energy << std::endl;
   return mean_energy;
