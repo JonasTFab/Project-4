@@ -45,105 +45,67 @@ arma::Mat<double> spin_system(int L){ //set up the lattice of spins with random 
       spin_matrix(i,j) = spin();
     }
   }
-  std::cout << spin_matrix << "\n";
   return spin_matrix;
 } // end of function spin_system()
 
-int ising_model(int L, double T, arma::mat spin_matrix){
+int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
   int number_of_iterations = 100;
   std::uniform_real_distribution<double> dis(-1, L); //chose a random spin to flip
   std::uniform_real_distribution<double> r_dis(0.0, 1.0);
   double energy = 0;
+  int Magnetization;
   int N = L*L;
   int M = pow(2,N);
   double beta = 1/(k_b*T);
-  arma::Mat<double> w = arma::vec(M+1);
-
-  // Sjekk Coding energy differences på side 16 i statphys
-  for (int i=0; i<=M; i++){
-    w(i) = -8*J + 16*i/M;
+  arma::Mat<double> w = arma::vec(17);
+  for (int de = -8; de <= 8; de += 4){
+    w(de+8) = exp(-de/T);
   }
-  std::cout << "w: " << w << std::endl;
-
+  //calculate initial energy
   for (int x = 0; x < L; x++){
     for(int y = 0; y < L; y++){
-    energy -= spin_matrix(x,y)*(spin_matrix(periodic(x,L,-1),y) + spin_matrix(x,periodic(y,L,-1))); //*(spin_matrix(i-1,j)+spin_matrix(i,j-1)+spin_matrix(i+1,j)+spin_matrix(i,j+1));//J = 1
+    energy -= spin_matrix(x,y) * (spin_matrix(periodic(x,L,-1),y) + spin_matrix(x,periodic(y,L,-1))); //*(spin_matrix(i-1,j)+spin_matrix(i,j-1)+spin_matrix(i+1,j)+spin_matrix(i,j+1));//J = 1
+    Magnetization += spin_matrix(x,y);
     }
   }
-  double mean_energy = energy/N;
-  double Z = (2*exp(-8)+exp(8) + 12);               // NB! Denne gjelder kun for 2x2
 
-
-  // Mean absolute value of the magnetization,
-  // Spesific heat capacity C_V and Suscecbtibility
-  // using analytical solutions
-  double mean_mag = arma::accu(abs(spin_matrix))/N;
-  double C_v = J / (k_b*T*T);
-  double chi = 1 / (k_b*T);
-
-  std::cout << "Analytic mean magnetization:      " << mean_mag << std::endl;
-  std::cout << "Analytic specific heat capacity:  " << C_v << std::endl;
-  std::cout << "Analytic suscecbtibility:         " << chi << std::endl;
-
-
-
-  //The Metropolis Algorithm and the Two-dimensional Ising Model
-  for (int i = 0; i < N; i++){
-    double new_energy = 0;
+  //The Metropolis Algorithm
+  for (int i = 0; i < MC_cycles; i++){
+    for (int s=0; s < N; s++){
     int random_x = dis(generator);//random i index to flip
     int random_y = dis(generator);//random j index to flip
-    arma::Mat<double> new_spin_matrix = spin_matrix;
-    new_spin_matrix(random_x,random_y) *= (-1);//new lattice with one randomly flipped spin
-
-    energy = spin_matrix(random_x,random_y) *
+    double new_energy = 0;
+    int delta_energy = 2*spin_matrix(random_x,random_y) *
     (spin_matrix(periodic(random_x,L,-1),random_y) +
     spin_matrix(periodic(random_x,L,1),random_y) +
     spin_matrix(random_x,periodic(random_y,L,-1)) +
     spin_matrix(random_x,periodic(random_y,L,1)));
-
-    /*new_energy = new_spin_matrix(random_x,random_y)*
-    (new_spin_matrix(periodic(random_x,L,-1),random_y) +
-    new_spin_matrix(periodic(random_x,L,1),random_y) +
-    new_spin_matrix(random_x,periodic(random_y,L,-1)) +
-    new_spin_matrix(random_x,periodic(random_y,L,1)));*/
-
-    double delta_energy = 2*energy;//-energy;
-    if (delta_energy <= 0){
+    std::cout << delta_energy << std::endl;
+    if (r_dis(generator) <= w(delta_energy + 8)) {
       spin_matrix(random_x,random_y) *= (-1);
-    }
-    else{
-      w(i) = exp(-beta*delta_energy); //this can be precalculated, how?
-      double r = r_dis(generator);
-      if (r <= w(i)){
-        spin_matrix(random_x,random_y) *= (-1);
+      energy += delta_energy;
+      Magnetization += 2*spin_matrix(random_x,random_y);
+       }
       }
+     }
+     // Mean absolute value of the magnetization,
+     // Spesific heat capacity C_V and Suscecbtibility
+     // using analytical solutions
+      double mean_mag = arma::accu(abs(spin_matrix))/N;
+      double C_v = J / (k_b*T*T);
+      double chi = 1 / (k_b*T);
 
-    }
-
-    //std::cout << energy << std::endl;
-    /*if (delta_energy <= 0){
-      spin_matrix = new_spin_matrix;
-      energy = new_energy;
-    }
-    else{
-      w(i) = exp(-beta*delta_energy); //this can be precalculated, how?
-      double r = r_dis(generator);
-      if (r <= w(i)){
-        spin_matrix = new_spin_matrix;
-        energy = new_energy;
-      }
-    }
-  std::cout << energy << std::endl;
-*/
-}
+      //std::cout << "Analytic mean magnetization:      " << mean_mag << std::endl;
+      //std::cout << "Analytic specific heat capacity:  " << C_v << std::endl;
+      //std::cout << "Analytic suscecbtibility:         " << chi << std::endl;
 
   //std::cout << energy << std::endl;
-  return mean_energy;
+  return 0;
 } // end of function ising_model()
 
 int main(int argc, char* argv[]){
   int N;
-
+  int MC_cycles = 100;
   int L = atoi(argv[1]);
   double Temp = atof(argv[2]);
   if (argc != 3){
@@ -154,7 +116,7 @@ int main(int argc, char* argv[]){
   //std::cout << "chose temperature T. N = LXL: L= ";
 
   arma::Mat<double> matrix = spin_system(L);
-  ising_model(L,Temp,matrix);
+  ising_model(L,Temp,matrix,MC_cycles);
   }
 
 
@@ -175,12 +137,41 @@ int main(int argc, char* argv[]){
 
 /* JUNK
 
-  if(std::floor(N)!=std::ceil(N)){
-    std::cout << "Bad Usage: " << N <<
-    "Not an integer" << std::endl;
-    exit(1);
-    }
-  else{
-    ;
+arma::Mat<double> new_spin_matrix = spin_matrix;
+new_spin_matrix(random_x,random_y) *= (-1);//new lattice with one randomly flipped spin
+  new_energy = new_spin_matrix(random_x,random_y)*
+  (new_spin_matrix(periodic(random_x,L,-1),random_y) +
+  new_spin_matrix(periodic(random_x,L,1),random_y) +
+  new_spin_matrix(random_x,periodic(random_y,L,-1)) +
+  new_spin_matrix(random_x,periodic(random_y,L,1)));
+
+
+  // Sjekk Coding energy differences på side 16 i statphys
+  for (int i=0; i<=M; i++){
+    //w(i) = -8*J + 16*i/M;
   }
+
+  //std::cout << energy << std::endl;
+  if (delta_energy <= 0){
+    spin_matrix = new_spin_matrix;
+    energy = new_energy;
+  }
+  else{
+    w(i) = exp(-beta*delta_energy); //this can be precalculated, how?
+    double r = r_dis(generator);
+    if (r <= w(i)){
+      spin_matrix = new_spin_matrix;
+      energy = new_energy;
+    }
+  }
+
+
+  else{
+    w(i) = exp(-beta*delta_energy); //this can be precalculated, how?
+    double r = r_dis(generator);
+    if (r <= w(i)){
+      spin_matrix(random_x,random_y) *= (-1);
+     }
+std::cout << energy << std::endl;
+
 */
