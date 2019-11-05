@@ -114,11 +114,12 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
      ave_mag /= MC_cycles;
      ave_mag_squared /= MC_cycles;
 
+     /*
      std::cout << "Average energy:                  " << ave_energy << std::endl;
      std::cout << "Average energy squared:          " << ave_energy_squared << std::endl;
      std::cout << "Average magnetization:           " << ave_mag << std::endl;
      std::cout << "Average magnetization squared:   " << ave_mag_squared << std::endl;
-
+     */
 
      // Mean absolute value of the magnetization,
      // Spesific heat capacity C_V and Suscecbtibility
@@ -129,13 +130,14 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
       //std::cout << "Analytic mean magnetization:      " << mean_mag << std::endl;
       //std::cout << "Analytic specific heat capacity:  " << C_v << std::endl;
       //std::cout << "Analytic suscecbtibility:         " << chi << std::endl;
-
       ofile << std::setiosflags(std::ios::showpoint | std::ios::uppercase);
-      ofile << std::setw(15) << std::setprecision(8) << T;
-      ofile << std::setw(15) << std::setprecision(8) << ave_energy;
-      ofile << std::setw(15) << std::setprecision(8) << ave_mag;
-      ofile << std::setw(15) << std::setprecision(8) << ave_energy_squared;
-      ofile << std::setw(15) << std::setprecision(8) << ave_mag_squared;
+      ofile << std::setw(15) << std::setprecision(10) << T;
+      ofile << std::setw(15) << std::setprecision(10) << MC_cycles;
+      ofile << std::setw(15) << std::setprecision(10) << ave_energy;
+      ofile << std::setw(15) << std::setprecision(10) << ave_mag;
+      ofile << std::setw(15) << std::setprecision(10) << ave_energy_squared;
+      ofile << std::setw(15) << std::setprecision(10) << ave_mag_squared;
+      ofile << "\n";
 
   //std::cout << energy << std::endl;
   return 0;
@@ -152,13 +154,28 @@ int main(int argc, char* argv[]){
   }
 
   //define filename of the utput file
-  std::string fileout = "MC_cycles_";
+  std::string fileout = "MC_cycles.txt";
+  /*
   std::string argument = std::to_string(MC_cycles);
   fileout.append(argument);
+  fileout.append("_T_");
+  std::string argument2 = std::to_string(Temp);
+  fileout.append(argument2);
+  fileout.append(ordering);
+  */
   ofile.open(fileout);
-
   arma::Mat<double> matrix = spin_system(L,ordering);
-  ising_model(L,Temp,matrix,MC_cycles);
+  ofile << std::setiosflags(std::ios::showpoint | std::ios::uppercase);
+  ofile << std::setw(15)  << "Temp:";
+  ofile << std::setw(15)  << "MC_cycles:";
+  ofile << std::setw(15)  << "Avg_E:";
+  ofile << std::setw(15)  << "Avg_E^2:";
+  ofile << std::setw(15)  << "Avg_mag:";
+  ofile << std::setw(15)  << "Avg_mag^2:\n";
+  for (int num_cycles = 100; num_cycles <= MC_cycles; num_cycles += 100){
+    ising_model(L,Temp,matrix,num_cycles);
+  }
+
   ofile.close();
   }
 
