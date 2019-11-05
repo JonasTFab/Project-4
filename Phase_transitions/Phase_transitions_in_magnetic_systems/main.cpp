@@ -49,7 +49,6 @@ arma::Mat<double> spin_system(int L){ //set up the lattice of spins with random 
 } // end of function spin_system()
 
 int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
-  int number_of_iterations = 100;
   std::uniform_real_distribution<double> dis(-1, L); //chose a random spin to flip
   std::uniform_real_distribution<double> r_dis(0.0, 1.0);
   double energy = 0;
@@ -69,32 +68,55 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
     }
   }
 
+  double ave_energy = 0;
+  double ave_energy_squared = 0;
+  double ave_mag = 0;
+  double ave_mag_squared = 0;
+
   //The Metropolis Algorithm
   for (int i = 0; i < MC_cycles; i++){
     for (int s=0; s < N; s++){
     int random_x = dis(generator);//random i index to flip
     int random_y = dis(generator);//random j index to flip
-    double new_energy = 0;
+
     int delta_energy = 2*spin_matrix(random_x,random_y) *
     (spin_matrix(periodic(random_x,L,-1),random_y) +
     spin_matrix(periodic(random_x,L,1),random_y) +
     spin_matrix(random_x,periodic(random_y,L,-1)) +
     spin_matrix(random_x,periodic(random_y,L,1)));
-    std::cout << delta_energy << std::endl;
+
+    //std::cout << delta_energy << std::endl;
     if (r_dis(generator) <= w(delta_energy + 8)) {
       spin_matrix(random_x,random_y) *= (-1);
       energy += delta_energy;
       Magnetization += 2*spin_matrix(random_x,random_y);
        }
       }
+     // Updating the expectation values
+     ave_energy += energy;
+     ave_energy_squared += energy*energy;
+     ave_mag += Magnetization;
+     ave_mag_squared += Magnetization*Magnetization;
      }
+
+     // Normalize
+     ave_energy /= MC_cycles;
+     ave_energy_squared /= MC_cycles;
+     ave_mag /= MC_cycles;
+     ave_mag_squared /= MC_cycles;
+
+     std::cout << "Average energy:                  " << ave_energy << std::endl;
+     std::cout << "Average energy squared:          " << ave_energy_squared << std::endl;
+     std::cout << "Average magnetization:           " << ave_mag << std::endl;
+     std::cout << "Average magnetization squared:   " << ave_mag_squared << std::endl;
+
+
      // Mean absolute value of the magnetization,
      // Spesific heat capacity C_V and Suscecbtibility
      // using analytical solutions
       double mean_mag = arma::accu(abs(spin_matrix))/N;
       double C_v = J / (k_b*T*T);
       double chi = 1 / (k_b*T);
-
       //std::cout << "Analytic mean magnetization:      " << mean_mag << std::endl;
       //std::cout << "Analytic specific heat capacity:  " << C_v << std::endl;
       //std::cout << "Analytic suscecbtibility:         " << chi << std::endl;
@@ -105,7 +127,7 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
 
 int main(int argc, char* argv[]){
   int N;
-  int MC_cycles = 100;
+  int MC_cycles = 10;
   int L = atoi(argv[1]);
   double Temp = atof(argv[2]);
   if (argc != 3){
