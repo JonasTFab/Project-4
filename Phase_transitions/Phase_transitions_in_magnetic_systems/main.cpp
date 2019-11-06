@@ -53,7 +53,7 @@ arma::Mat<double> spin_system(int L,std::string ordering){ //set up the lattice 
     }
     }
   }
-  std::cout << spin_matrix << std::endl;
+  //std::cout << spin_matrix << std::endl;
   return spin_matrix;
 } // end of function spin_system()
 
@@ -62,6 +62,7 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
   std::uniform_real_distribution<double> r_dis(0.0, 1.0);
   double energy = 0;
   int Magnetization = 0;
+  int accepted_configs = 0; //number of accepted cofigurations
   int N = L*L;
   int M = pow(2,N);
   double beta = 1/((double) k_b*T);
@@ -99,6 +100,7 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
       spin_matrix(random_x,random_y) *= (-1);
       energy += delta_energy;
       Magnetization += 2*spin_matrix(random_x,random_y);
+      accepted_configs += 1;
        }
       }
      // Updating the expectation values
@@ -115,8 +117,8 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
      ave_mag_squared /= (double) MC_cycles;
 
 
-     double spec_heat_cap = ave_energy_squared - ave_energy*ave_energy;
-     double susceptibility = ave_mag_squared - ave_mag*ave_mag;
+     double spec_heat_cap = (ave_energy_squared - ave_energy*ave_energy)/(k_b*T*T);
+     double susceptibility = (ave_mag_squared - ave_mag*ave_mag)/(k_b*T);
 
 
      /*
@@ -125,7 +127,7 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
      std::cout << "Specific heat capacity:                    " << spec_heat_cap << std::endl;
      std::cout << "Average magnetization:                     " << ave_mag << std::endl;
      std::cout << "Average magnetization squared:             " << ave_mag_squared << std::endl;
-     std::cout << "Susceptibility:                            " << susceptibility << "\n\n";
+     std::cout << "Susceptibility:                            " << susceptibility << "\n\n";*/
 
      // Analytic solution of mean energy, mean
      // energy squared, mean magnetization and
@@ -137,14 +139,14 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
      double an_ave_mag_squared = (32*exp(8*beta*J) + 32) / Z;
      double an_spec_heat_cap = (1/(k_b*T*T)) * (an_ave_energy_squared - an_ave_energy*an_ave_energy);
      double an_susceptibility = (1/(k_b*T)) * (an_ave_mag_squared - an_ave_mag*an_ave_mag);
-
+     /*
      std::cout << "Analytic average energy:                   " << an_ave_energy << std::endl;
      std::cout << "Analytic average energy squared:           " << an_ave_energy_squared << std::endl;
      std::cout << "Analytic specific heat capacity:           " << an_spec_heat_cap << std::endl;
      std::cout << "Analytic average magnetization:            " << an_ave_mag << std::endl;
      std::cout << "Analytic average magnetization squared:    " << an_ave_mag_squared << std::endl;
-     std::cout << "Analytic susceptibility:                   " << an_susceptibility << "\n\n";
-     */
+     std::cout << "Analytic susceptibility:                   " << an_susceptibility << "\n\n";*/
+
 
 
      ofile << std::setw(15) << std::setprecision(10) << T;
@@ -153,6 +155,7 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
      ofile << std::setw(15) << std::setprecision(10) << ave_mag;
      ofile << std::setw(15) << std::setprecision(10) << ave_energy_squared;
      ofile << std::setw(15) << std::setprecision(10) << ave_mag_squared;
+     ofile << std::setw(15) << std::setprecision(10) << accepted_configs;
      ofile << "\n";
   //std::cout << energy << std::endl;
   return 0;
@@ -169,9 +172,16 @@ int main(int argc, char* argv[]){
   double Temp = atof(argv[2]);
   std::string ordering = argv[3];
   int MC_cycles = atoi(argv[4]);
+  std::string fileout;
 
   //define filename of the utput file
-  std::string fileout = "MC_cycles.txt";
+  if (ordering=="random"){
+  fileout = "MC_cycles_random.txt";
+  }
+  else {
+  fileout = "MC_cycles_ordered.txt";
+  }
+
   /*
   std::string argument = std::to_string(MC_cycles);
   fileout.append(argument);
@@ -188,7 +198,8 @@ int main(int argc, char* argv[]){
   ofile << std::setw(15)  << "Avg_E:";
   ofile << std::setw(15)  << "Avg_E^2:";
   ofile << std::setw(15)  << "Avg_mag:";
-  ofile << std::setw(15)  << "Avg_mag^2:\n";
+  ofile << std::setw(15)  << "Avg_mag^2:";
+  ofile << std::setw(15)  << "accepted conf:";
   for (int num_cycles = 100; num_cycles <= MC_cycles; num_cycles += 100){
     ising_model(L,Temp,matrix,num_cycles);
   }
