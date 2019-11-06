@@ -94,7 +94,7 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
     spin_matrix(periodic(random_x,L,1),random_y) +
     spin_matrix(random_x,periodic(random_y,L,-1)) +
     spin_matrix(random_x,periodic(random_y,L,1)));
-
+    std::cout << delta_energy << std::endl;
     //std::cout << delta_energy << std::endl;
     if (r_dis(generator) <= w(delta_energy + 8)) {
       spin_matrix(random_x,random_y) *= (-1);
