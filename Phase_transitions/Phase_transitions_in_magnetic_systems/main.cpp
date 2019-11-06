@@ -61,7 +61,7 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
   std::uniform_real_distribution<double> dis(-1, L); //chose a random spin to flip
   std::uniform_real_distribution<double> r_dis(0.0, 1.0);
   double energy = 0;
-  int Magnetization;
+  int Magnetization = 0;
   int N = L*L;
   int M = pow(2,N);
   double beta = 1/(k_b*T);
