@@ -4,16 +4,22 @@
 #include <armadillo>
 #include <cstdlib>
 #include <random>
+#include <sstream>
+#include <string>
 //For debugging:
 // compile with: g++ main.cpp -o main1 -larmadillo -llapack -lblas
-// execute with ./main1 length temperature
+// execute with ./main1 length temperature ordered/random
 
 //For paralellization
 //mpicxx  -o main_mpi.x  main.cpp -std=c++11
 //mpiexec -n 2 ./main_mpi.x 8
+
 double J = 1;
 double k_b = 1;//.38064852e-23;
 std::mt19937 generator (time(NULL)); //seed rng with time now
+//output file
+std::ofstream ofile;
+
 
 // inline function for periodic boundary conditions
 inline int periodic(int i, int limit, int add) {
@@ -38,13 +44,16 @@ int spin(){ //generate random spins up or down with mersenne twister
       }
 } // end of function spin()
 
-arma::Mat<double> spin_system(int L){ //set up the lattice of spins with random spins up or down
-  arma::Mat<double> spin_matrix = arma::mat(L, L);
+arma::Mat<double> spin_system(int L,std::string ordering){ //set up the lattice of spins with random spins up or down
+  arma::Mat<double> spin_matrix = arma::mat(L, L,arma::fill::ones);
+  if (ordering == "random"){
   for (int i = 0; i < L; i++){
     for(int j = 0; j < L; j++){
       spin_matrix(i,j) = spin();
     }
+    }
   }
+  std::cout << spin_matrix << std::endl;
   return spin_matrix;
 } // end of function spin_system()
 
@@ -105,16 +114,19 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
      ave_mag /= (double) MC_cycles;
      ave_mag_squared /= (double) MC_cycles;
 
+<<<<<<<
      double spec_heat_cap = ave_energy_squared - ave_energy*ave_energy;
      double susceptibility = ave_mag_squared - ave_mag*ave_mag;
+=======
+     /*
+     std::cout << "Average energy:                  " << ave_energy << std::endl;
+     std::cout << "Average energy squared:          " << ave_energy_squared << std::endl;
+     std::cout << "Average magnetization:           " << ave_mag << std::endl;
+     std::cout << "Average magnetization squared:   " << ave_mag_squared << std::endl;
+     */
+>>>>>>>
 
-     std::cout << "Average energy:                            " << ave_energy << std::endl;
-     std::cout << "Average energy squared:                    " << ave_energy_squared << std::endl;
      std::cout << "Specific heat capacity:                    " << spec_heat_cap << std::endl;
-     std::cout << "Average magnetization:                     " << ave_mag << std::endl;
-     std::cout << "Average magnetization squared:             " << ave_mag_squared << std::endl;
-     std::cout << "Susceptibility:                            " << susceptibility << "\n\n";
-
 
      // Analytic solution of mean energy, mean
      // energy squared, mean magnetization and
@@ -138,19 +150,45 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
 } // end of function ising_model()
 
 int main(int argc, char* argv[]){
+<<<<<<<
   int N;
   int MC_cycles = 1000;
+=======
+
+>>>>>>>
   int L = atoi(argv[1]);
   double Temp = atof(argv[2]);
-  if (argc != 3){
-    std::cout << "Bad usage! Enter on command line: 1.(./filename) 2.(Lattice_length) 3.(Temperature)";
+  std::string ordering = argv[3];
+  int MC_cycles = atoi(argv[4]);
+  if (argc != 5){
+    std::cout << "Bad usage! Enter on command line: 1.(./filename) 2.(Lattice_length) 3.(Temperature) 4.(random/ordered) 5. number of monte carlo cycles";
     exit(1);
   }
-  //std::cout << "chose lattice length L. N = LXL: L= ";
-  //std::cout << "chose temperature T. N = LXL: L= ";
 
-  arma::Mat<double> matrix = spin_system(L);
-  ising_model(L,Temp,matrix,MC_cycles);
+  //define filename of the utput file
+  std::string fileout = "MC_cycles.txt";
+  /*
+  std::string argument = std::to_string(MC_cycles);
+  fileout.append(argument);
+  fileout.append("_T_");
+  std::string argument2 = std::to_string(Temp);
+  fileout.append(argument2);
+  fileout.append(ordering);
+  */
+  ofile.open(fileout);
+  arma::Mat<double> matrix = spin_system(L,ordering);
+  ofile << std::setiosflags(std::ios::showpoint | std::ios::uppercase);
+  ofile << std::setw(15)  << "Temp:";
+  ofile << std::setw(15)  << "MC_cycles:";
+  ofile << std::setw(15)  << "Avg_E:";
+  ofile << std::setw(15)  << "Avg_E^2:";
+  ofile << std::setw(15)  << "Avg_mag:";
+  ofile << std::setw(15)  << "Avg_mag^2:\n";
+  for (int num_cycles = 100; num_cycles <= MC_cycles; num_cycles += 100){
+    ising_model(L,Temp,matrix,num_cycles);
+  }
+
+  ofile.close();
   }
 
 
