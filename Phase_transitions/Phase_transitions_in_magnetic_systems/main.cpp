@@ -114,19 +114,18 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
      ave_mag /= (double) MC_cycles;
      ave_mag_squared /= (double) MC_cycles;
 
-<<<<<<<
+
      double spec_heat_cap = ave_energy_squared - ave_energy*ave_energy;
      double susceptibility = ave_mag_squared - ave_mag*ave_mag;
-=======
-     /*
-     std::cout << "Average energy:                  " << ave_energy << std::endl;
-     std::cout << "Average energy squared:          " << ave_energy_squared << std::endl;
-     std::cout << "Average magnetization:           " << ave_mag << std::endl;
-     std::cout << "Average magnetization squared:   " << ave_mag_squared << std::endl;
-     */
->>>>>>>
 
+
+     /*
+     std::cout << "Average energy:                            " << ave_energy << std::endl;
+     std::cout << "Average energy squared:                    " << ave_energy_squared << std::endl;
      std::cout << "Specific heat capacity:                    " << spec_heat_cap << std::endl;
+     std::cout << "Average magnetization:                     " << ave_mag << std::endl;
+     std::cout << "Average magnetization squared:             " << ave_mag_squared << std::endl;
+     std::cout << "Susceptibility:                            " << susceptibility << "\n\n";
 
      // Analytic solution of mean energy, mean
      // energy squared, mean magnetization and
@@ -144,26 +143,32 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
      std::cout << "Analytic specific heat capacity:           " << an_spec_heat_cap << std::endl;
      std::cout << "Analytic average magnetization:            " << an_ave_mag << std::endl;
      std::cout << "Analytic average magnetization squared:    " << an_ave_mag_squared << std::endl;
-     std::cout << "Analytic susceptibility:                   " << an_susceptibility << std::endl;
+     std::cout << "Analytic susceptibility:                   " << an_susceptibility << "\n\n";
+     */
+
+
+     ofile << std::setw(15) << std::setprecision(10) << T;
+     ofile << std::setw(15) << std::setprecision(10) << MC_cycles;
+     ofile << std::setw(15) << std::setprecision(10) << ave_energy;
+     ofile << std::setw(15) << std::setprecision(10) << ave_mag;
+     ofile << std::setw(15) << std::setprecision(10) << ave_energy_squared;
+     ofile << std::setw(15) << std::setprecision(10) << ave_mag_squared;
+     ofile << "\n";
   //std::cout << energy << std::endl;
   return 0;
 } // end of function ising_model()
 
 int main(int argc, char* argv[]){
-<<<<<<<
   int N;
-  int MC_cycles = 1000;
-=======
 
->>>>>>>
-  int L = atoi(argv[1]);
-  double Temp = atof(argv[2]);
-  std::string ordering = argv[3];
-  int MC_cycles = atoi(argv[4]);
   if (argc != 5){
     std::cout << "Bad usage! Enter on command line: 1.(./filename) 2.(Lattice_length) 3.(Temperature) 4.(random/ordered) 5. number of monte carlo cycles";
     exit(1);
   }
+  int L = atoi(argv[1]);
+  double Temp = atof(argv[2]);
+  std::string ordering = argv[3];
+  int MC_cycles = atoi(argv[4]);
 
   //define filename of the utput file
   std::string fileout = "MC_cycles.txt";
