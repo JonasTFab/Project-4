@@ -52,10 +52,10 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
   std::uniform_real_distribution<double> dis(-1, L); //chose a random spin to flip
   std::uniform_real_distribution<double> r_dis(0.0, 1.0);
   double energy = 0;
-  int Magnetization;
+  int Magnetization = 0;
   int N = L*L;
   int M = pow(2,N);
-  double beta = 1/(k_b*T);
+  double beta = 1/((double) k_b*T);
   arma::Mat<double> w = arma::vec(17);
   for (int de = -8; de <= 8; de += 4){
     w(de+8) = exp(-de/T);
@@ -95,39 +95,51 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
      // Updating the expectation values
      ave_energy += energy;
      ave_energy_squared += energy*energy;
-     ave_mag += Magnetization;
+     ave_mag += abs(Magnetization);
      ave_mag_squared += Magnetization*Magnetization;
      }
 
      // Normalize
-     ave_energy /= MC_cycles;
-     ave_energy_squared /= MC_cycles;
-     ave_mag /= MC_cycles;
-     ave_mag_squared /= MC_cycles;
+     ave_energy /= (double) MC_cycles;
+     ave_energy_squared /= (double) MC_cycles;
+     ave_mag /= (double) MC_cycles;
+     ave_mag_squared /= (double) MC_cycles;
 
-     std::cout << "Average energy:                  " << ave_energy << std::endl;
-     std::cout << "Average energy squared:          " << ave_energy_squared << std::endl;
-     std::cout << "Average magnetization:           " << ave_mag << std::endl;
-     std::cout << "Average magnetization squared:   " << ave_mag_squared << std::endl;
+     double spec_heat_cap = ave_energy_squared - ave_energy*ave_energy;
+     double susceptibility = ave_mag_squared - ave_mag*ave_mag;
+
+     std::cout << "Average energy:                            " << ave_energy << std::endl;
+     std::cout << "Average energy squared:                    " << ave_energy_squared << std::endl;
+     std::cout << "Specific heat capacity:                    " << spec_heat_cap << std::endl;
+     std::cout << "Average magnetization:                     " << ave_mag << std::endl;
+     std::cout << "Average magnetization squared:             " << ave_mag_squared << std::endl;
+     std::cout << "Susceptibility:                            " << susceptibility << "\n\n";
 
 
-     // Mean absolute value of the magnetization,
-     // Spesific heat capacity C_V and Suscecbtibility
-     // using analytical solutions
-      double mean_mag = arma::accu(abs(spin_matrix))/N;
-      double C_v = J / (k_b*T*T);
-      double chi = 1 / (k_b*T);
-      //std::cout << "Analytic mean magnetization:      " << mean_mag << std::endl;
-      //std::cout << "Analytic specific heat capacity:  " << C_v << std::endl;
-      //std::cout << "Analytic suscecbtibility:         " << chi << std::endl;
+     // Analytic solution of mean energy, mean
+     // energy squared, mean magnetization and
+     // mean magnetization squared
+     double Z = 2*exp(-8*beta*J) + 2*exp(8*beta*J) + 12;
+     double an_ave_energy = -(16*J/Z) * (exp(8*beta*J) - exp(-8*beta*J));
+     double an_ave_energy_squared = (128*J*J/Z) * (exp(8*beta*J) + exp(-8*beta*J));
+     double an_ave_mag = (8*exp(8*beta*J) + 16) / Z;
+     double an_ave_mag_squared = (32*exp(8*beta*J) + 32) / Z;
+     double an_spec_heat_cap = (1/(k_b*T*T)) * (an_ave_energy_squared - an_ave_energy*an_ave_energy);
+     double an_susceptibility = (1/(k_b*T)) * (an_ave_mag_squared - an_ave_mag*an_ave_mag);
 
+     std::cout << "Analytic average energy:                   " << an_ave_energy << std::endl;
+     std::cout << "Analytic average energy squared:           " << an_ave_energy_squared << std::endl;
+     std::cout << "Analytic specific heat capacity:           " << an_spec_heat_cap << std::endl;
+     std::cout << "Analytic average magnetization:            " << an_ave_mag << std::endl;
+     std::cout << "Analytic average magnetization squared:    " << an_ave_mag_squared << std::endl;
+     std::cout << "Analytic susceptibility:                   " << an_susceptibility << std::endl;
   //std::cout << energy << std::endl;
   return 0;
 } // end of function ising_model()
 
 int main(int argc, char* argv[]){
   int N;
-  int MC_cycles = 10;
+  int MC_cycles = 1000;
   int L = atoi(argv[1]);
   double Temp = atof(argv[2]);
   if (argc != 3){
