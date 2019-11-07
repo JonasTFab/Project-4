@@ -65,6 +65,19 @@ def c_plots(random_file,ordered_file):
     plt.legend()
     plt.show()
 
+def d_plots(filename):
+    counted_energies = np.loadtxt(filename)
+    unique, counts = np.unique(counted_energies, return_counts=True)
+    probabilities = counts/len(counted_energies)
+    print(counts)
+    print(unique)
 
-c_plots("MC_cycles_random_T24.txt","MC_cycles_ordered_T24.txt")
-c_plots("MC_cycles_random_T1.txt","MC_cycles_ordered_T1.txt")
+    #plt.hist(unique)
+    #plt.show()
+    plt.plot(unique,probabilities)
+    plt.show()
+
+d_plots("4d_counted_energies.txt")
+
+#c_plots("MC_cycles_random_T24.txt","MC_cycles_ordered_T24.txt")
+#c_plots("MC_cycles_random_T1.txt","MC_cycles_ordered_T1.txt")
