@@ -65,19 +65,28 @@ def c_plots(random_file,ordered_file):
     plt.legend()
     plt.show()
 
-def d_plots(filename):
+def d_plots(filename,mean):
     counted_energies = np.loadtxt(filename)
-    unique, counts = np.unique(counted_energies, return_counts=True)
-    probabilities = counts/len(counted_energies)
-    print(counts)
-    print(unique)
+    unique, counts = np.unique(counted_energies[4000:-1], return_counts=True)
+    probabilities = counts/np.sum(counts)
 
-    #plt.hist(unique)
+    plt.bar(unique, height = probabilities, width = 5)
+    plt.plot(np.linspace(mean,mean),np.linspace(0,max(probabilities)),"r")
+    "Remember to write that the expectation value calculated in main is at the top of this"
     #plt.show()
-    plt.plot(unique,probabilities)
+    #plt.plot(unique,probabilities)
     plt.show()
 
-d_plots("4d_counted_energies.txt")
+
+
+
+
+#average energy for this system -499.874
+d_plots("4d_counted_energies_random1.txt",-798.438)
+d_plots("4d_counted_energies_ordered1.txt",-798.92)
+d_plots("4d_counted_energies_random2.txt",-499.351)
+d_plots("4d_counted_energies_ordered2.txt",-500.688)
+
 
 #c_plots("MC_cycles_random_T24.txt","MC_cycles_ordered_T24.txt")
 #c_plots("MC_cycles_random_T1.txt","MC_cycles_ordered_T1.txt")

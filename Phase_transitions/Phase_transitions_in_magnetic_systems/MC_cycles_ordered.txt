@@ -1,0 +1,1 @@
+          Temp:     MC_cycles:         Avg_E:       Avg_E^2:       Avg_mag:     Avg_mag^2:accepted conf:
