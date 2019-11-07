@@ -73,10 +73,27 @@ def d_plots(filename):
     sigma = np.sqrt(variance)
     unique, counts = np.unique(counted_energies[4000:-1], return_counts=True)
     probabilities = counts/np.sum(counts)
-
+    x = list(filename.split('_')[3])
+    b = x
+    if b[0] == "r":
+        if b[6] == '1':
+            T = 1
+        else:
+            T = 2.4
+        title = ("P(E) for random matrix [T = %1.f]" %T)
+    else:
+        if b[7] == '1':
+            T = 1
+        else:
+            T = 2.4
+        title = ("P(E) for ordered matrix [T = %1.f]" %T)
+    plt.title(title)
     plt.bar(unique, height = probabilities, width = 5)
-    plt.plot(np.linspace(mean,mean),np.linspace(0,max(probabilities)),"r")
-    plt.plot(np.linspace(mean-sigma,mean+sigma,2),np.linspace(max(probabilities)/2,max(probabilities)/2,2),markersize = 20,marker ="|",color = "magenta")
+    plt.plot(np.linspace(mean,mean),np.linspace(0,max(probabilities)),"r",label = "Average energy")
+    plt.plot(np.linspace(mean-sigma,mean+sigma,2),np.linspace(max(probabilities)/2,max(probabilities)/2,2),markersize = 20,marker ="|",color = "magenta",label = "Standard deviation")
+    plt.legend()
+    plt.ylabel('P')
+    plt.xlabel('Energy')
     "Remember to write that the expectation value calculated in main is at the top of this"
 
 #average energy for this system -499.874
