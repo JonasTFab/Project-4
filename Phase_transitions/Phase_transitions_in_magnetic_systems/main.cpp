@@ -17,9 +17,8 @@
 double J = 1;
 double k_b = 1;//.38064852e-23;
 std::mt19937 generator (time(NULL)); //seed rng with time now
-//output file
+//output files
 std::ofstream ofile;
-
 
 // inline function for periodic boundary conditions
 inline int periodic(int i, int limit, int add) {
@@ -57,7 +56,7 @@ arma::Mat<double> spin_system(int L,std::string ordering){ //set up the lattice 
   return spin_matrix;
 } // end of function spin_system()
 
-int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
+arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles, arma::vec save_energies){
   std::uniform_real_distribution<double> dis(-1, L); //chose a random spin to flip
   std::uniform_real_distribution<double> r_dis(0.0, 1.0);
   double energy = 0;
@@ -73,7 +72,7 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
   //calculate initial energy
   for (int x = 0; x < L; x++){
     for(int y = 0; y < L; y++){
-    energy -= spin_matrix(x,y) * (spin_matrix(periodic(x,L,-1),y) + spin_matrix(x,periodic(y,L,-1))); //*(spin_matrix(i-1,j)+spin_matrix(i,j-1)+spin_matrix(i+1,j)+spin_matrix(i,j+1));//J = 1
+    energy -= spin_matrix(x,y) * (spin_matrix(periodic(x,L,-1),y) + spin_matrix(x,periodic(y,L,-1)));
     Magnetization += spin_matrix(x,y);
     }
   }
@@ -94,7 +93,7 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
     spin_matrix(periodic(random_x,L,1),random_y) +
     spin_matrix(random_x,periodic(random_y,L,-1)) +
     spin_matrix(random_x,periodic(random_y,L,1)));
-    std::cout << delta_energy << std::endl;
+
     //std::cout << delta_energy << std::endl;
     if (r_dis(generator) <= w(delta_energy + 8)) {
       spin_matrix(random_x,random_y) *= (-1);
@@ -103,6 +102,7 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
       accepted_configs += 1;
        }
       }
+     save_energies(i) = energy;
      // Updating the expectation values
      ave_energy += energy;
      ave_energy_squared += energy*energy;
@@ -148,7 +148,7 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
      std::cout << "Analytic susceptibility:                   " << an_susceptibility << "\n\n";*/
 
 
-
+     /*
      ofile << std::setw(15) << std::setprecision(10) << T;
      ofile << std::setw(15) << std::setprecision(10) << MC_cycles;
      ofile << std::setw(15) << std::setprecision(10) << ave_energy;
@@ -156,9 +156,9 @@ int ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles){
      ofile << std::setw(15) << std::setprecision(10) << ave_energy_squared;
      ofile << std::setw(15) << std::setprecision(10) << ave_mag_squared;
      ofile << std::setw(15) << std::setprecision(10) << accepted_configs;
-     ofile << "\n";
+     ofile << "\n";*/
   //std::cout << energy << std::endl;
-  return 0;
+  return save_energies;
 } // end of function ising_model()
 
 int main(int argc, char* argv[]){
@@ -199,11 +199,15 @@ int main(int argc, char* argv[]){
   ofile << std::setw(15)  << "Avg_E^2:";
   ofile << std::setw(15)  << "Avg_mag:";
   ofile << std::setw(15)  << "Avg_mag^2:";
-  ofile << std::setw(15)  << "accepted conf:";
+  ofile << std::setw(15)  << "accepted conf:\n";
   for (int num_cycles = 100; num_cycles <= MC_cycles; num_cycles += 100){
-    ising_model(L,Temp,matrix,num_cycles);
+    ising_model(L,Temp,matrix,num_cycles,arma::vec(num_cycles));
   }
-
+  ofile.close();
+  arma::Mat<double> save_energies = arma::vec(MC_cycles); //vector will contain all energies and will be used to calculate probabilities
+  arma::Mat<double> output_save_energies = ising_model(L,Temp,matrix,MC_cycles,save_energies);
+  ofile.open("4d_counted_energies.txt");
+  ofile <<   output_save_energies;
   ofile.close();
   }
 

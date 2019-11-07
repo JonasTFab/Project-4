@@ -1,1 +1,1 @@
-          Temp:     MC_cycles:         Avg_E:       Avg_E^2:       Avg_mag:     Avg_mag^2: accepted conf:    1.000000000            100   -743.5600000    324.9800000    559331.3600    116067.0800           1507
+          Temp:     MC_cycles:         Avg_E:       Avg_E^2:       Avg_mag:     Avg_mag^2:accepted conf:
