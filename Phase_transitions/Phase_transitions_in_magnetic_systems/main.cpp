@@ -119,8 +119,8 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
 
      double spec_heat_cap = (ave_energy_squared - ave_energy*ave_energy)/(k_b*T*T);
      double susceptibility = (ave_mag_squared - ave_mag*ave_mag)/(k_b*T);
-
-     std::cout << "Average energy:                            " << ave_energy << std::endl;
+     save_energies(0) = ave_energy;
+     save_energies(1) = spec_heat_cap*(k_b*T*T);
      /*
      std::cout << "Average energy:                            " << ave_energy << std::endl;
      std::cout << "Average energy squared:                    " << ave_energy_squared << std::endl;
