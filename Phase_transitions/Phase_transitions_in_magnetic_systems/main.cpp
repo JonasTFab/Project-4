@@ -233,9 +233,9 @@ int main(int argc, char* argv[]){
 
   else{
     int num_procs, proc_rank;
-    double T_max = 2.3;
+    double T_max = 2.4;
     double T_min = 2.0;
-    int steps = 8*50;
+    int steps = 8*40;
     double delta_T = (T_max-T_min)/(steps-1);
 
     arma::Col <double> Temp_vec = arma::vec(steps);
