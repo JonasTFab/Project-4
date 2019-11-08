@@ -80,17 +80,17 @@ def d_plots(filename):
             T = 1
         else:
             T = 2.4
-        title = ("P(E) for random matrix [T = %1.f]" %T)
+        title = ("P(E) for random matrix [T = %.1f]" %T)
     else:
         if b[7] == '1':
             T = 1
         else:
             T = 2.4
-        title = ("P(E) for ordered matrix [T = %1.f]" %T)
+        title = ("P(E) for ordered matrix [T = %.1f]" %T)
     plt.title(title)
     plt.bar(unique, height = probabilities, width = 5)
-    plt.plot(np.linspace(mean,mean),np.linspace(0,max(probabilities)),"r",label = "Average energy")
-    plt.plot(np.linspace(mean-sigma,mean+sigma,2),np.linspace(max(probabilities)/2,max(probabilities)/2,2),markersize = 20,marker ="|",color = "magenta",label = "Standard deviation")
+    plt.plot(np.linspace(mean,mean),np.linspace(0,max(probabilities)),"gold",label = "Average energy")
+    plt.plot(np.linspace(mean-sigma,mean+sigma,2),np.linspace(max(probabilities)/2,max(probabilities)/2,2),markersize = 20,marker ="|",color = "r",label = "Standard deviation")
     plt.legend()
     plt.ylabel('P')
     plt.xlabel('Energy')

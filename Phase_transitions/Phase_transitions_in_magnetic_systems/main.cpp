@@ -13,7 +13,7 @@
 
 //For paralellization
 //mpicxx  -o main_mpi.x  main.cpp -std=c++11
-//mpiexec -n 2 ./main_mpi.x 8
+//mpiexec -n 2 ./main_mpi.x
 
 double J = 1;
 double k_b = 1;//.38064852e-23;
