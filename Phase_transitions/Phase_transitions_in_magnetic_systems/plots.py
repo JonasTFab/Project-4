@@ -108,7 +108,8 @@ def e_plots(filename):
     plt.subplot(211)
     dat = np.transpose(np.loadtxt(filename))
     Temp,avg_e,h_capacity,susceptibility,avg_m = dat[0],dat[1],dat[2],dat[3],dat[4]
-    plt.plot(Temp,avg_e,"r", label = "Average energy")
+    print(len(Temp))
+    plt.plot(Temp,avg_e/400/2,"r", label = "Average energy")
     plt.grid()
     plt.ylabel("E")
     plt.subplot(212)
@@ -133,7 +134,7 @@ def e_plots(filename):
     plt.legend()
     plt.show()
 
-e_plots("4e_L40.txt")
+e_plots("test_file.txt")
 
 #c_plots("MC_cycles_random_T24.txt","MC_cycles_ordered_T24.txt")
 #c_plots("MC_cycles_random_T1.txt","MC_cycles_ordered_T1.txt")

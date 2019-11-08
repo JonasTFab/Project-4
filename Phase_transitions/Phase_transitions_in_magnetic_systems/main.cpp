@@ -235,8 +235,19 @@ int main(int argc, char* argv[]){
     int num_procs, proc_rank;
     double T_max = 2.4;
     double T_min = 2.0;
-    int steps = 8*40;
+    int steps = 160;
     double delta_T = (T_max-T_min)/(steps-1);
+
+    MPI_Init (&argc, &argv);
+    MPI_Comm_size (MPI_COMM_WORLD, &num_procs);
+    MPI_Comm_rank (MPI_COMM_WORLD, &proc_rank);
+
+    MPI_Bcast(&MC_cycles,1,MPI_INT,0, MPI_COMM_WORLD);
+    MPI_Bcast(&T_min,1,MPI_INT,0, MPI_COMM_WORLD);
+    MPI_Bcast(&T_max,1,MPI_INT,0, MPI_COMM_WORLD);
+    MPI_Bcast(&L,1,MPI_INT,0, MPI_COMM_WORLD);
+    MPI_Bcast(&delta_T,1,MPI_DOUBLE,0, MPI_COMM_WORLD);
+
 
     arma::Col <double> Temp_vec = arma::vec(steps);
     for (int i=0; i<steps; i++){
@@ -244,32 +255,52 @@ int main(int argc, char* argv[]){
     }
 
     // MPI initializations
-    MPI_Init (&argc, &argv);
-    MPI_Comm_size (MPI_COMM_WORLD, &num_procs);
-    MPI_Comm_rank (MPI_COMM_WORLD, &proc_rank);
+
+
+
     //std::cout << "Rank " << proc_rank << " out of " << num_procs << std::endl;
+    std::random_device rd;
     std::mt19937 generator (time(NULL) << proc_rank); //seed for different ranks
     int runs = steps/num_procs;
     std::string test_file = "test_file.txt";
     ofile.open(test_file);
-    for (int i=0; i<runs; i++){
-      arma::Mat<double> matrix = spin_system(L,ordering,generator);
-      double ave_energy;
-      double spec_heat_cap;
-      double ave_mag;
-      double susceptibility;
-      std::cout << i << std::endl;
-      double rank_T = Temp_vec(proc_rank+num_procs*i);
 
-      ising_model(L, rank_T, matrix, MC_cycles, arma::vec(MC_cycles),
+
+    int n_array = 4;
+
+    double *quantity_vec = new double [n_array];
+    double *new_quantity_vec = new double [n_array];
+
+    double ave_energy;
+    double spec_heat_cap;
+    double ave_mag;
+    double susceptibility;
+    //double rank_T = Temp_vec(proc_rank+num_procs*i);
+    double rank_T;
+
+    for (double i=T_min; i<= T_max; i += delta_T){
+      arma::Mat<double> matrix = spin_system(L,ordering,generator);
+
+      ising_model(L, i, matrix, MC_cycles, arma::vec(MC_cycles),
                   ave_energy, spec_heat_cap, ave_mag, susceptibility, generator);
+
+      quantity_vec[0] = ave_energy;
+      quantity_vec[1] = spec_heat_cap;
+      quantity_vec[2] = ave_mag;
+      quantity_vec[3] = susceptibility;
+
+      MPI_Reduce(&quantity_vec[0], &new_quantity_vec[0], 4,MPI_DOUBLE,
+      MPI_SUM, 0, MPI_COMM_WORLD);
+      if(proc_rank == 0){
       ofile << std::setiosflags(std::ios::showpoint | std::ios::uppercase);
-      ofile << std::setw(15)  << rank_T;
-      ofile << std::setw(15)  << ave_energy;
-      ofile << std::setw(15)  << spec_heat_cap;
-      ofile << std::setw(15)  << susceptibility;
-      ofile << std::setw(15)  << ave_mag << std::endl;
+      ofile << std::setw(15)  << i;
+      ofile << std::setw(15)  << new_quantity_vec[0]/num_procs;
+      ofile << std::setw(15)  << new_quantity_vec[1]/num_procs;
+      ofile << std::setw(15)  << new_quantity_vec[2]/num_procs;
+      ofile << std::setw(15)  << new_quantity_vec[3]/num_procs << std::endl;
     }
+    }
+    MPI_Finalize ();
 
     ofile.open(fileout);
     arma::Mat<double> matrix = spin_system(L,ordering,generator);
@@ -277,7 +308,6 @@ int main(int argc, char* argv[]){
     ofile << std::setw(15)  << "accepted conf:\n";
 
 
-    MPI_Finalize ();
   }
 } // end of function main()
 
