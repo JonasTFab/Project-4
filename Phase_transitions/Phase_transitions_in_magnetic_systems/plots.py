@@ -98,10 +98,21 @@ def d_plots(filename):
 
 #average energy for this system -499.874
 "First two elements of the following files are 1. average energy, 2. variance"
-d_plots("4d_counted_energies_random1.txt")
-d_plots("4d_counted_energies_ordered1.txt")
-d_plots("4d_counted_energies_random2.txt")
-d_plots("4d_counted_energies_ordered2.txt")
+#d_plots("4d_counted_energies_random1.txt")
+#d_plots("4d_counted_energies_ordered1.txt")
+#d_plots("4d_counted_energies_random2.txt")
+#d_plots("4d_counted_energies_ordered2.txt")
+#plt.show()
+
+dat = np.transpose(np.loadtxt("test_file.txt"))
+Temp,avg_e,h_capacity,susceptibility,avg_m = dat[0],dat[1],dat[2],dat[3],dat[4]
+plt.plot(Temp,avg_e)
+plt.show()
+plt.plot(Temp,h_capacity)
+plt.show()
+plt.plot(Temp,susceptibility)
+plt.show()
+plt.plot(Temp,avg_m)
 plt.show()
 
 

@@ -55,7 +55,7 @@ arma::Mat<double> spin_system(int L,std::string ordering, std::mt19937 &generato
 } // end of function spin_system()
 
 arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles, arma::vec save_energies,
-            double &ave_energy, double &ave_energy_squared, double &ave_mag, double &ave_mag_squared, std::mt19937 generator){
+            double &ave_energy, double &spec_heat_cap, double &ave_mag, double &susceptibility, std::mt19937 generator){
   std::uniform_real_distribution<double> dis(-1, L); //chose a random spin to flip
   std::uniform_real_distribution<double> r_dis(0.0, 1.0);
   double energy = 0;
@@ -77,9 +77,9 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
   }
 
   //double ave_energy = 0;
-  //double ave_energy_squared = 0;
+  double ave_energy_squared = 0;
   //double ave_mag = 0;
-  //double ave_mag_squared = 0;
+  double ave_mag_squared = 0;
 
   //The Metropolis Algorithm
   //for (int i = 0; i < MC_cycles; i++){      // without MPI
@@ -117,8 +117,8 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
   ave_mag_squared /= (double) MC_cycles;
 
 
-  double spec_heat_cap = (ave_energy_squared - ave_energy*ave_energy)/(k_b*T*T);
-  double susceptibility = (ave_mag_squared - ave_mag*ave_mag)/(k_b*T);
+  spec_heat_cap = (ave_energy_squared - ave_energy*ave_energy)/(k_b*T*T);
+  susceptibility = (ave_mag_squared - ave_mag*ave_mag)/(k_b*T);
   save_energies(0) = ave_energy;
   save_energies(1) = spec_heat_cap*(k_b*T*T);
   /*
@@ -235,7 +235,7 @@ int main(int argc, char* argv[]){
     int num_procs, proc_rank;
     double T_max = 2.3;
     double T_min = 2.0;
-    int steps = 8;
+    int steps = 8*50;
     double delta_T = (T_max-T_min)/(steps-1);
 
     arma::Col <double> Temp_vec = arma::vec(steps);
@@ -250,21 +250,31 @@ int main(int argc, char* argv[]){
     //std::cout << "Rank " << proc_rank << " out of " << num_procs << std::endl;
     std::mt19937 generator (time(NULL) << proc_rank); //seed for different ranks
     int runs = steps/num_procs;
-
-
+    std::string test_file = "test_file.txt";
+    ofile.open(test_file);
     for (int i=0; i<runs; i++){
       arma::Mat<double> matrix = spin_system(L,ordering,generator);
       double ave_energy;
-      double ave_energy_squared;
+      double spec_heat_cap;
       double ave_mag;
-      double ave_mag_squared;
-
+      double susceptibility;
+      std::cout << i << std::endl;
       double rank_T = Temp_vec(proc_rank+num_procs*i);
 
       ising_model(L, rank_T, matrix, MC_cycles, arma::vec(MC_cycles),
-                  ave_energy, ave_energy_squared, ave_mag, ave_mag_squared, generator);
-      std::cout << ave_energy << std::endl;
+                  ave_energy, spec_heat_cap, ave_mag, susceptibility, generator);
+      ofile << std::setiosflags(std::ios::showpoint | std::ios::uppercase);
+      ofile << std::setw(15)  << rank_T;
+      ofile << std::setw(15)  << ave_energy;
+      ofile << std::setw(15)  << spec_heat_cap;
+      ofile << std::setw(15)  << susceptibility;
+      ofile << std::setw(15)  << ave_mag << std::endl;
     }
+
+    ofile.open(fileout);
+    arma::Mat<double> matrix = spin_system(L,ordering,generator);
+    ofile << std::setiosflags(std::ios::showpoint | std::ios::uppercase);
+    ofile << std::setw(15)  << "accepted conf:\n";
 
 
     MPI_Finalize ();
