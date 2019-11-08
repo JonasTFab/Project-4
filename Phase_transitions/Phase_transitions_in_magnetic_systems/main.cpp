@@ -235,7 +235,7 @@ int main(int argc, char* argv[]){
     int num_procs, proc_rank;
     double T_max = 2.4;
     double T_min = 2.0;
-    int steps = 160;
+    int steps = 200;
     double delta_T = (T_max-T_min)/(steps-1);
 
     MPI_Init (&argc, &argv);
@@ -255,16 +255,11 @@ int main(int argc, char* argv[]){
     }
 
     // MPI initializations
-
-
-
-    //std::cout << "Rank " << proc_rank << " out of " << num_procs << std::endl;
     std::random_device rd;
     std::mt19937 generator (time(NULL) << proc_rank); //seed for different ranks
     int runs = steps/num_procs;
     std::string test_file = "test_file.txt";
     ofile.open(test_file);
-
 
     int n_array = 4;
 
@@ -278,6 +273,8 @@ int main(int argc, char* argv[]){
     //double rank_T = Temp_vec(proc_rank+num_procs*i);
     double rank_T;
 
+    int old_work_done = 0;
+    double time_start = MPI_Wtime();
     for (double i=T_min; i<= T_max; i += delta_T){
       arma::Mat<double> matrix = spin_system(L,ordering,generator);
 
@@ -292,14 +289,29 @@ int main(int argc, char* argv[]){
       MPI_Reduce(&quantity_vec[0], &new_quantity_vec[0], 4,MPI_DOUBLE,
       MPI_SUM, 0, MPI_COMM_WORLD);
       if(proc_rank == 0){
-      ofile << std::setiosflags(std::ios::showpoint | std::ios::uppercase);
-      ofile << std::setw(15)  << i;
-      ofile << std::setw(15)  << new_quantity_vec[0]/num_procs;
-      ofile << std::setw(15)  << new_quantity_vec[1]/num_procs;
-      ofile << std::setw(15)  << new_quantity_vec[2]/num_procs;
-      ofile << std::setw(15)  << new_quantity_vec[3]/num_procs << std::endl;
+        ofile << std::setiosflags(std::ios::showpoint | std::ios::uppercase);
+        ofile << std::setw(15)  << i;
+        ofile << std::setw(15)  << new_quantity_vec[0]/num_procs;
+        ofile << std::setw(15)  << new_quantity_vec[1]/num_procs;
+        ofile << std::setw(15)  << new_quantity_vec[2]/num_procs;
+        ofile << std::setw(15)  << new_quantity_vec[3]/num_procs << std::endl;
+
+        int work_done = 100*(i-T_min) / (T_max-T_min);
+        if (work_done != old_work_done){
+          std::cout << work_done << "% done" << std::endl;
+          old_work_done = work_done;
+        }
+      }
     }
+    if (proc_rank == 0){
+      int time_taken = MPI_Wtime() - time_start;
+      int hours = time_taken/3600;
+      int minutes = time_taken/60;
+      int seconds = time_taken - minutes*60;
+      std::cout << "Time taken: " << time_taken << " seconds" << std::endl;
+      std::cout << hours << " hour(s) " << minutes << " minute(s) " << seconds << " second(s)" << std::endl;
     }
+
     MPI_Finalize ();
 
     ofile.open(fileout);
