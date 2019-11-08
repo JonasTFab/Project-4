@@ -6,6 +6,7 @@
 #include <random>
 #include <sstream>
 #include <string>
+#include "mpi.h"
 //For debugging:
 // compile with: g++ main.cpp -o main1 -larmadillo -llapack -lblas
 // execute with ./main1 length temperature ordered/random
@@ -16,7 +17,7 @@
 
 double J = 1;
 double k_b = 1;//.38064852e-23;
-std::mt19937 generator (time(NULL)); //seed rng with time now
+//std::mt19937 generator (time(NULL)); //seed rng with time now
 //output files
 std::ofstream ofile;
 
@@ -24,10 +25,7 @@ std::ofstream ofile;
 inline int periodic(int i, int limit, int add) {
   return (i+limit+add) % (limit);
 }
-//inline function for computing heat capacity at constant volume
-//inline double C_V(double T,mean_E){
-//return 1/(k_b*T*T)*(mean_E*mean_E)
-//}
+
 
 int spin(){ //generate random spins up or down with mersenne twister
   std::uniform_real_distribution<double> dis(0.0, 1.0);
@@ -56,7 +54,7 @@ arma::Mat<double> spin_system(int L,std::string ordering){ //set up the lattice 
   return spin_matrix;
 } // end of function spin_system()
 
-arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles, arma::vec save_energies){
+arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles, arma::vec save_energies, int cores=1){
   std::uniform_real_distribution<double> dis(-1, L); //chose a random spin to flip
   std::uniform_real_distribution<double> r_dis(0.0, 1.0);
   double energy = 0;
@@ -83,38 +81,39 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
   double ave_mag_squared = 0;
 
   //The Metropolis Algorithm
-  for (int i = 0; i < MC_cycles; i++){
+  //for (int i = 0; i < MC_cycles; i++){      // without MPI
+  for (int i = 0; i < MC_cycles/cores; i++){      // with MPI
     for (int s=0; s < N; s++){
-    int random_x = dis(generator);//random i index to flip
-    int random_y = dis(generator);//random j index to flip
+      int random_x = dis(generator);//random i index to flip
+      int random_y = dis(generator);//random j index to flip
 
-    int delta_energy = 2*spin_matrix(random_x,random_y) *
-    (spin_matrix(periodic(random_x,L,-1),random_y) +
-    spin_matrix(periodic(random_x,L,1),random_y) +
-    spin_matrix(random_x,periodic(random_y,L,-1)) +
-    spin_matrix(random_x,periodic(random_y,L,1)));
+      int delta_energy = 2*spin_matrix(random_x,random_y) *
+      (spin_matrix(periodic(random_x,L,-1),random_y) +
+      spin_matrix(periodic(random_x,L,1),random_y) +
+      spin_matrix(random_x,periodic(random_y,L,-1)) +
+      spin_matrix(random_x,periodic(random_y,L,1)));
 
-    //std::cout << delta_energy << std::endl;
-    if (r_dis(generator) <= w(delta_energy + 8)) {
-      spin_matrix(random_x,random_y) *= (-1);
-      energy += delta_energy;
-      Magnetization += 2*spin_matrix(random_x,random_y);
-      accepted_configs += 1;
-       }
+      //std::cout << delta_energy << std::endl;
+      if (r_dis(generator) <= w(delta_energy + 8)) {
+        spin_matrix(random_x,random_y) *= (-1);
+        energy += delta_energy;
+        Magnetization += 2*spin_matrix(random_x,random_y);
+        accepted_configs += 1;
       }
-     save_energies(i) = energy;
-     // Updating the expectation values
-     ave_energy += energy;
-     ave_energy_squared += energy*energy;
-     ave_mag += abs(Magnetization);
-     ave_mag_squared += Magnetization*Magnetization;
-     }
+    }
+    save_energies(i) = energy;
+    // Updating the expectation values
+    ave_energy += energy;
+    ave_energy_squared += energy*energy;
+    ave_mag += abs(Magnetization);
+    ave_mag_squared += Magnetization*Magnetization;
+  }
 
-     // Normalize
-     ave_energy /= (double) MC_cycles;
-     ave_energy_squared /= (double) MC_cycles;
-     ave_mag /= (double) MC_cycles;
-     ave_mag_squared /= (double) MC_cycles;
+  // Normalize
+  ave_energy /= (double) MC_cycles;
+  ave_energy_squared /= (double) MC_cycles;
+  ave_mag /= (double) MC_cycles;
+  ave_mag_squared /= (double) MC_cycles;
 
 
      double spec_heat_cap = (ave_energy_squared - ave_energy*ave_energy)/(k_b*T*T);
@@ -129,37 +128,41 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
      std::cout << "Average magnetization squared:             " << ave_mag_squared << std::endl;
      std::cout << "Susceptibility:                            " << susceptibility << "\n\n";*/
 
-     // Analytic solution of mean energy, mean
-     // energy squared, mean magnetization and
-     // mean magnetization squared
-     double Z = 2*exp(-8*beta*J) + 2*exp(8*beta*J) + 12;
-     double an_ave_energy = -(16*J/Z) * (exp(8*beta*J) - exp(-8*beta*J));
-     double an_ave_energy_squared = (128*J*J/Z) * (exp(8*beta*J) + exp(-8*beta*J));
-     double an_ave_mag = (8*exp(8*beta*J) + 16) / Z;
-     double an_ave_mag_squared = (32*exp(8*beta*J) + 32) / Z;
-     double an_spec_heat_cap = (1/(k_b*T*T)) * (an_ave_energy_squared - an_ave_energy*an_ave_energy);
-     double an_susceptibility = (1/(k_b*T)) * (an_ave_mag_squared - an_ave_mag*an_ave_mag);
-     /*
-     std::cout << "Analytic average energy:                   " << an_ave_energy << std::endl;
-     std::cout << "Analytic average energy squared:           " << an_ave_energy_squared << std::endl;
-     std::cout << "Analytic specific heat capacity:           " << an_spec_heat_cap << std::endl;
-     std::cout << "Analytic average magnetization:            " << an_ave_mag << std::endl;
-     std::cout << "Analytic average magnetization squared:    " << an_ave_mag_squared << std::endl;
-     std::cout << "Analytic susceptibility:                   " << an_susceptibility << "\n\n";*/
+  // Analytic solution of mean energy, mean
+  // energy squared, mean magnetization and
+  // mean magnetization squared
+  double Z = 2*exp(-8*beta*J) + 2*exp(8*beta*J) + 12;
+  double an_ave_energy = -(16*J/Z) * (exp(8*beta*J) - exp(-8*beta*J));
+  double an_ave_energy_squared = (128*J*J/Z) * (exp(8*beta*J) + exp(-8*beta*J));
+  double an_ave_mag = (8*exp(8*beta*J) + 16) / Z;
+  double an_ave_mag_squared = (32*exp(8*beta*J) + 32) / Z;
+  double an_spec_heat_cap = (1/(k_b*T*T)) * (an_ave_energy_squared - an_ave_energy*an_ave_energy);
+  double an_susceptibility = (1/(k_b*T)) * (an_ave_mag_squared - an_ave_mag*an_ave_mag);
+  /*
+  std::cout << "Analytic average energy:                   " << an_ave_energy << std::endl;
+  std::cout << "Analytic average energy squared:           " << an_ave_energy_squared << std::endl;
+  std::cout << "Analytic specific heat capacity:           " << an_spec_heat_cap << std::endl;
+  std::cout << "Analytic average magnetization:            " << an_ave_mag << std::endl;
+  std::cout << "Analytic average magnetization squared:    " << an_ave_mag_squared << std::endl;
+  std::cout << "Analytic susceptibility:                   " << an_susceptibility << "\n\n";*/
 
 
-     /*
-     ofile << std::setw(15) << std::setprecision(10) << T;
-     ofile << std::setw(15) << std::setprecision(10) << MC_cycles;
-     ofile << std::setw(15) << std::setprecision(10) << ave_energy;
-     ofile << std::setw(15) << std::setprecision(10) << ave_mag;
-     ofile << std::setw(15) << std::setprecision(10) << ave_energy_squared;
-     ofile << std::setw(15) << std::setprecision(10) << ave_mag_squared;
-     ofile << std::setw(15) << std::setprecision(10) << accepted_configs;
-     ofile << "\n";*/
+  /*
+  ofile << std::setw(15) << std::setprecision(10) << T;
+  ofile << std::setw(15) << std::setprecision(10) << MC_cycles;
+  ofile << std::setw(15) << std::setprecision(10) << ave_energy;
+  ofile << std::setw(15) << std::setprecision(10) << ave_mag;
+  ofile << std::setw(15) << std::setprecision(10) << ave_energy_squared;
+  ofile << std::setw(15) << std::setprecision(10) << ave_mag_squared;
+  ofile << std::setw(15) << std::setprecision(10) << accepted_configs;
+  ofile << "\n";*/
   //std::cout << energy << std::endl;
   return save_energies;
 } // end of function ising_model()
+
+
+
+
 
 int main(int argc, char* argv[]){
   int N;
@@ -174,47 +177,88 @@ int main(int argc, char* argv[]){
   int MC_cycles = atoi(argv[4]);
   std::string fileout;
 
-  //define filename of the utput file
-  if (ordering=="random"){
-  fileout = "MC_cycles_random.txt";
-  }
-  else {
-  fileout = "MC_cycles_ordered.txt";
+  if (Temp != 0){
+    std::mt19937 generator (time(NULL));   //seed rng with time now
+    //define filename of the utput file
+    if (ordering=="random"){
+    fileout = "MC_cycles_random.txt";
+    }
+    else {
+    fileout = "MC_cycles_ordered.txt";
+    }
+
+    /*
+    std::string argument = std::to_string(MC_cycles);
+    fileout.append(argument);
+    fileout.append("_T_");
+    std::string argument2 = std::to_string(Temp);
+    fileout.append(argument2);
+    fileout.append(ordering);
+    */
+
+
+    ofile.open(fileout);
+    arma::Mat<double> matrix = spin_system(L,ordering);
+    ofile << std::setiosflags(std::ios::showpoint | std::ios::uppercase);
+    ofile << std::setw(15)  << "Temp:";
+    ofile << std::setw(15)  << "MC_cycles:";
+    ofile << std::setw(15)  << "Avg_E:";
+    ofile << std::setw(15)  << "Avg_E^2:";
+    ofile << std::setw(15)  << "Avg_mag:";
+    ofile << std::setw(15)  << "Avg_mag^2:";
+    ofile << std::setw(15)  << "accepted conf:\n";
+
+    //for (int num_cycles = 100; num_cycles <= MC_cycles; num_cycles += 100){
+    //  ising_model(L,Temp,matrix,num_cycles,arma::vec(num_cycles));
+    //}
+
+    ofile.close();
+    arma::Mat<double> save_energies = arma::vec(MC_cycles); //vector will contain all energies and will be used to calculate probabilities
+    arma::Mat<double> output_save_energies = ising_model(L,Temp,matrix,MC_cycles,save_energies);
+    std::string output_file = "4d_counted_energies_";
+    output_file.append(ordering);
+    output_file.append(std::to_string(int(Temp)));
+    output_file.append(".txt");
+    std::cout << output_file << std::endl;
+    ofile.open(output_file);
+    ofile <<  output_save_energies;
+    ofile.close();
+
   }
 
-  /*
-  std::string argument = std::to_string(MC_cycles);
-  fileout.append(argument);
-  fileout.append("_T_");
-  std::string argument2 = std::to_string(Temp);
-  fileout.append(argument2);
-  fileout.append(ordering);
-  */
-  ofile.open(fileout);
-  arma::Mat<double> matrix = spin_system(L,ordering);
-  ofile << std::setiosflags(std::ios::showpoint | std::ios::uppercase);
-  ofile << std::setw(15)  << "Temp:";
-  ofile << std::setw(15)  << "MC_cycles:";
-  ofile << std::setw(15)  << "Avg_E:";
-  ofile << std::setw(15)  << "Avg_E^2:";
-  ofile << std::setw(15)  << "Avg_mag:";
-  ofile << std::setw(15)  << "Avg_mag^2:";
-  ofile << std::setw(15)  << "accepted conf:\n";
-  //for (int num_cycles = 100; num_cycles <= MC_cycles; num_cycles += 100){
-  //  ising_model(L,Temp,matrix,num_cycles,arma::vec(num_cycles));
-  //}
-  ofile.close();
-  arma::Mat<double> save_energies = arma::vec(MC_cycles); //vector will contain all energies and will be used to calculate probabilities
-  arma::Mat<double> output_save_energies = ising_model(L,Temp,matrix,MC_cycles,save_energies);
-  std::string output_file = "4d_counted_energies_";
-  output_file.append(ordering);
-  output_file.append(std::to_string(int(Temp)));
-  output_file.append(".txt");
-  std::cout << output_file << std::endl;
-  ofile.open(output_file);
-  ofile <<  output_save_energies;
-  ofile.close();
+
+
+  else{
+    int num_procs, proc_rank;
+    // MPI initializations
+    MPI_Init (&argc, &argv);
+    MPI_Comm_size (MPI_COMM_WORLD, &num_procs);
+    MPI_Comm_rank (MPI_COMM_WORLD, &proc_rank);
+    std::cout << "Rank " << proc_rank+1 << " out of " << num_procs << std::endl;
+    std::mt19937 generator (time(NULL) << proc_rank); //seed for different ranks
+
+    int local_cycles = MC_cycles/num_procs;
+
+    ising_model(L,Temp,matrix,num_cycles,arma::vec(num_cycles),num_procs);
+
+
+    MPI_Finalize ();
+
+    // Finding expectation values as a function of T
+    double T_max = 2.3;
+    double T_min = 2.0;
+    double delta_T = 0.05;
+    int steps = (T_max-T_min)/delta_T + 2;
+
+
+
+    arma::Col <double> Temp_vec = arma::vec(steps);
+    for (int i=0; i<steps; i++){
+      Temp_vec(i) = T_min + i*delta_T;
+    }
   }
+
+} // end of function main()
 
 
 
