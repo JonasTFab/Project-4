@@ -17,7 +17,7 @@
 
 double J = 1;
 double k_b = 1;//.38064852e-23;
-//std::mt19937 generator (time(NULL)); //seed rng with time now
+std::mt19937 generator (time(NULL)); //seed rng with time now
 //output files
 std::ofstream ofile;
 
@@ -54,7 +54,7 @@ arma::Mat<double> spin_system(int L,std::string ordering){ //set up the lattice 
   return spin_matrix;
 } // end of function spin_system()
 
-arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles, arma::vec save_energies, int cores=1){
+arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles, arma::vec save_energies){
   std::uniform_real_distribution<double> dis(-1, L); //chose a random spin to flip
   std::uniform_real_distribution<double> r_dis(0.0, 1.0);
   double energy = 0;
@@ -82,7 +82,7 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
 
   //The Metropolis Algorithm
   //for (int i = 0; i < MC_cycles; i++){      // without MPI
-  for (int i = 0; i < MC_cycles/cores; i++){      // with MPI
+  for (int i = 0; i < MC_cycles; i++){      // with MPI
     for (int s=0; s < N; s++){
       int random_x = dis(generator);//random i index to flip
       int random_y = dis(generator);//random j index to flip
@@ -116,17 +116,17 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
   ave_mag_squared /= (double) MC_cycles;
 
 
-     double spec_heat_cap = (ave_energy_squared - ave_energy*ave_energy)/(k_b*T*T);
-     double susceptibility = (ave_mag_squared - ave_mag*ave_mag)/(k_b*T);
-     save_energies(0) = ave_energy;
-     save_energies(1) = spec_heat_cap*(k_b*T*T);
-     /*
-     std::cout << "Average energy:                            " << ave_energy << std::endl;
-     std::cout << "Average energy squared:                    " << ave_energy_squared << std::endl;
-     std::cout << "Specific heat capacity:                    " << spec_heat_cap << std::endl;
-     std::cout << "Average magnetization:                     " << ave_mag << std::endl;
-     std::cout << "Average magnetization squared:             " << ave_mag_squared << std::endl;
-     std::cout << "Susceptibility:                            " << susceptibility << "\n\n";*/
+  double spec_heat_cap = (ave_energy_squared - ave_energy*ave_energy)/(k_b*T*T);
+  double susceptibility = (ave_mag_squared - ave_mag*ave_mag)/(k_b*T);
+  save_energies(0) = ave_energy;
+  save_energies(1) = spec_heat_cap*(k_b*T*T);
+  /*
+  std::cout << "Average energy:                            " << ave_energy << std::endl;
+  std::cout << "Average energy squared:                    " << ave_energy_squared << std::endl;
+  std::cout << "Specific heat capacity:                    " << spec_heat_cap << std::endl;
+  std::cout << "Average magnetization:                     " << ave_mag << std::endl;
+  std::cout << "Average magnetization squared:             " << ave_mag_squared << std::endl;
+  std::cout << "Susceptibility:                            " << susceptibility << "\n\n";*/
 
   // Analytic solution of mean energy, mean
   // energy squared, mean magnetization and
@@ -178,7 +178,7 @@ int main(int argc, char* argv[]){
   std::string fileout;
 
   if (Temp != 0){
-    std::mt19937 generator (time(NULL));   //seed rng with time now
+    //std::mt19937 generator (time(NULL));   //seed rng with time now
     //define filename of the utput file
     if (ordering=="random"){
     fileout = "MC_cycles_random.txt";
@@ -212,6 +212,7 @@ int main(int argc, char* argv[]){
     //  ising_model(L,Temp,matrix,num_cycles,arma::vec(num_cycles));
     //}
 
+    /*
     ofile.close();
     arma::Mat<double> save_energies = arma::vec(MC_cycles); //vector will contain all energies and will be used to calculate probabilities
     arma::Mat<double> output_save_energies = ising_model(L,Temp,matrix,MC_cycles,save_energies);
@@ -223,6 +224,7 @@ int main(int argc, char* argv[]){
     ofile.open(output_file);
     ofile <<  output_save_energies;
     ofile.close();
+    */
 
   }
 
@@ -234,12 +236,24 @@ int main(int argc, char* argv[]){
     MPI_Init (&argc, &argv);
     MPI_Comm_size (MPI_COMM_WORLD, &num_procs);
     MPI_Comm_rank (MPI_COMM_WORLD, &proc_rank);
-    std::cout << "Rank " << proc_rank+1 << " out of " << num_procs << std::endl;
+    //std::cout << "Rank " << proc_rank << " out of " << num_procs << std::endl;
     std::mt19937 generator (time(NULL) << proc_rank); //seed for different ranks
 
     int local_cycles = MC_cycles/num_procs;
 
-    ising_model(L,Temp,matrix,num_cycles,arma::vec(num_cycles),num_procs);
+    double* ave_energy;
+    double* ave_energy_squared;
+    double* ave_mag;
+    double* ave_mag_squared;
+
+    arma::Mat<double> matrix = spin_system(L,ordering);
+    double Temp = 1;
+    ising_model(L, Temp, matrix, MC_cycles/num_procs, arma::vec(MC_cycles/num_procs),
+                &ave_energy, &ave_energy_squared, &ave_mag, &ave_mag_squared);
+
+    std::cout << ave_energy << std::endl;
+
+    double sum_ave_energy = 0;
 
 
     MPI_Finalize ();
@@ -247,8 +261,10 @@ int main(int argc, char* argv[]){
     // Finding expectation values as a function of T
     double T_max = 2.3;
     double T_min = 2.0;
-    double delta_T = 0.05;
-    int steps = (T_max-T_min)/delta_T + 2;
+    int steps = 8;
+    double delta_T = (T_max-T_min)/steps;
+    //double delta_T = 0.05;
+    //int steps = (T_max-T_min)/delta_T + 2;
 
 
 
