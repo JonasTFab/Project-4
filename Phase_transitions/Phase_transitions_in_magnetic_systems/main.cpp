@@ -17,7 +17,7 @@
 
 double J = 1;
 double k_b = 1;//.38064852e-23;
-std::mt19937 generator (time(NULL)); //seed rng with time now
+//std::mt19937 generator (time(NULL)); //seed rng with time now
 //output files
 std::ofstream ofile;
 
@@ -27,7 +27,7 @@ inline int periodic(int i, int limit, int add) {
 }
 
 
-int spin(){ //generate random spins up or down with mersenne twister
+int spin(std::mt19937 &generator){ //generate random spins up or down with mersenne twister
   std::uniform_real_distribution<double> dis(0.0, 1.0);
   double ran_nr = dis(generator);
   double divide = 0.5;
@@ -41,12 +41,12 @@ int spin(){ //generate random spins up or down with mersenne twister
       }
 } // end of function spin()
 
-arma::Mat<double> spin_system(int L,std::string ordering){ //set up the lattice of spins with random spins up or down
+arma::Mat<double> spin_system(int L,std::string ordering, std::mt19937 &generator){ //set up the lattice of spins with random spins up or down
   arma::Mat<double> spin_matrix = arma::mat(L, L,arma::fill::ones);
   if (ordering == "random"){
   for (int i = 0; i < L; i++){
     for(int j = 0; j < L; j++){
-      spin_matrix(i,j) = spin();
+      spin_matrix(i,j) = spin(generator);
     }
     }
   }
@@ -54,7 +54,8 @@ arma::Mat<double> spin_system(int L,std::string ordering){ //set up the lattice 
   return spin_matrix;
 } // end of function spin_system()
 
-arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles, arma::vec save_energies){
+arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles, arma::vec save_energies,
+            double &ave_energy, double &ave_energy_squared, double &ave_mag, double &ave_mag_squared, std::mt19937 generator){
   std::uniform_real_distribution<double> dis(-1, L); //chose a random spin to flip
   std::uniform_real_distribution<double> r_dis(0.0, 1.0);
   double energy = 0;
@@ -75,10 +76,10 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
     }
   }
 
-  double ave_energy = 0;
-  double ave_energy_squared = 0;
-  double ave_mag = 0;
-  double ave_mag_squared = 0;
+  //double ave_energy = 0;
+  //double ave_energy_squared = 0;
+  //double ave_mag = 0;
+  //double ave_mag_squared = 0;
 
   //The Metropolis Algorithm
   //for (int i = 0; i < MC_cycles; i++){      // without MPI
@@ -178,7 +179,7 @@ int main(int argc, char* argv[]){
   std::string fileout;
 
   if (Temp != 0){
-    //std::mt19937 generator (time(NULL));   //seed rng with time now
+    std::mt19937 generator (time(NULL));   //seed rng with time now
     //define filename of the utput file
     if (ordering=="random"){
     fileout = "MC_cycles_random.txt";
@@ -198,7 +199,7 @@ int main(int argc, char* argv[]){
 
 
     ofile.open(fileout);
-    arma::Mat<double> matrix = spin_system(L,ordering);
+    arma::Mat<double> matrix = spin_system(L,ordering,generator);
     ofile << std::setiosflags(std::ios::showpoint | std::ios::uppercase);
     ofile << std::setw(15)  << "Temp:";
     ofile << std::setw(15)  << "MC_cycles:";
@@ -232,48 +233,42 @@ int main(int argc, char* argv[]){
 
   else{
     int num_procs, proc_rank;
+    double T_max = 2.3;
+    double T_min = 2.0;
+    int steps = 8;
+    double delta_T = (T_max-T_min)/(steps-1);
+
+    arma::Col <double> Temp_vec = arma::vec(steps);
+    for (int i=0; i<steps; i++){
+      Temp_vec(i) = T_min + i*delta_T;
+    }
+
     // MPI initializations
     MPI_Init (&argc, &argv);
     MPI_Comm_size (MPI_COMM_WORLD, &num_procs);
     MPI_Comm_rank (MPI_COMM_WORLD, &proc_rank);
     //std::cout << "Rank " << proc_rank << " out of " << num_procs << std::endl;
     std::mt19937 generator (time(NULL) << proc_rank); //seed for different ranks
+    int runs = steps/num_procs;
 
-    int local_cycles = MC_cycles/num_procs;
 
-    double* ave_energy;
-    double* ave_energy_squared;
-    double* ave_mag;
-    double* ave_mag_squared;
+    for (int i=0; i<runs; i++){
+      arma::Mat<double> matrix = spin_system(L,ordering,generator);
+      double ave_energy;
+      double ave_energy_squared;
+      double ave_mag;
+      double ave_mag_squared;
 
-    arma::Mat<double> matrix = spin_system(L,ordering);
-    double Temp = 1;
-    ising_model(L, Temp, matrix, MC_cycles/num_procs, arma::vec(MC_cycles/num_procs),
-                &ave_energy, &ave_energy_squared, &ave_mag, &ave_mag_squared);
+      double rank_T = Temp_vec(proc_rank+num_procs*i);
 
-    std::cout << ave_energy << std::endl;
-
-    double sum_ave_energy = 0;
+      ising_model(L, rank_T, matrix, MC_cycles, arma::vec(MC_cycles),
+                  ave_energy, ave_energy_squared, ave_mag, ave_mag_squared, generator);
+      std::cout << ave_energy << std::endl;
+    }
 
 
     MPI_Finalize ();
-
-    // Finding expectation values as a function of T
-    double T_max = 2.3;
-    double T_min = 2.0;
-    int steps = 8;
-    double delta_T = (T_max-T_min)/steps;
-    //double delta_T = 0.05;
-    //int steps = (T_max-T_min)/delta_T + 2;
-
-
-
-    arma::Col <double> Temp_vec = arma::vec(steps);
-    for (int i=0; i<steps; i++){
-      Temp_vec(i) = T_min + i*delta_T;
-    }
   }
-
 } // end of function main()
 
 
