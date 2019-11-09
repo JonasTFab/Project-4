@@ -138,6 +138,10 @@ def e_plots(filename):
     plt.ylabel("\u03A7")
     plt.grid()
     plt.legend()
-    plt.show()
+    #plt.show()
 
+e_plots("4e_L40.txt")
+e_plots("4e_L60.txt")
 e_plots("4e_L80.txt")
+e_plots("4e_L100.txt")
+plt.show()
