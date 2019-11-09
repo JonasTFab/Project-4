@@ -65,6 +65,9 @@ def c_plots(random_file,ordered_file):
     plt.legend()
     plt.show()
 
+#c_plots("MC_cycles_random_T24.txt","MC_cycles_ordered_T24.txt")
+#c_plots("MC_cycles_random_T1.txt","MC_cycles_ordered_T1.txt")
+
 def d_plots(filename):
     plt.figure()
     counted_energies = np.loadtxt(filename)
@@ -105,12 +108,14 @@ def d_plots(filename):
 #plt.show()
 
 def e_plots(filename):
+    plt.figure(1)
     plt.subplot(211)
     dat = np.transpose(np.loadtxt(filename))
     Temp,avg_e,h_capacity,susceptibility,avg_m = dat[0],dat[1],dat[2],dat[3],dat[4]
     print(len(Temp))
-    plt.plot(Temp,avg_e/400/2,"r", label = "Average energy")
+    plt.plot(Temp,avg_e/400/2,"r", label=("Average energy"))
     plt.grid()
+    plt.legend()
     plt.ylabel("E")
     plt.subplot(212)
     plt.plot(Temp,avg_m,"g",label =("Average magnetization"))
@@ -118,8 +123,9 @@ def e_plots(filename):
     plt.ylabel("M")
     plt.legend()
     plt.grid()
-    plt.show()
+    #plt.show()
 
+    plt.figure(2)
     plt.subplot(211)
     plt.plot(Temp,h_capacity, "b",label = ("Heat capacity"))
     plt.xlabel("T")
@@ -134,7 +140,4 @@ def e_plots(filename):
     plt.legend()
     plt.show()
 
-e_plots("test_file.txt")
-
-#c_plots("MC_cycles_random_T24.txt","MC_cycles_ordered_T24.txt")
-#c_plots("MC_cycles_random_T1.txt","MC_cycles_ordered_T1.txt")
+e_plots("4e_L80.txt")

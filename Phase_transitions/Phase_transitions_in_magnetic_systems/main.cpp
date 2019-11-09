@@ -60,9 +60,9 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
   std::uniform_real_distribution<double> r_dis(0.0, 1.0);
   double energy = 0;
   int Magnetization = 0;
-  int accepted_configs = 0; //number of accepted cofigurations
-  int N = L*L;
-  int M = pow(2,N);
+  int accepted_configs = 0;           // number of accepted cofigurations
+  int N = L*L;                        // total number of spins
+  int M = pow(2,N);                   // total number of possible states
   double beta = 1/((double) k_b*T);
   arma::Mat<double> w = arma::vec(17);
   for (int de = -8; de <= 8; de += 4){
@@ -306,8 +306,8 @@ int main(int argc, char* argv[]){
     if (proc_rank == 0){
       int time_taken = MPI_Wtime() - time_start;
       int hours = time_taken/3600;
-      int minutes = time_taken/60;
-      int seconds = time_taken - minutes*60;
+      int minutes = time_taken/60 - hours*60;
+      int seconds = time_taken - minutes*60 - hours*3600;
       std::cout << "Time taken: " << time_taken << " seconds" << std::endl;
       std::cout << hours << " hour(s) " << minutes << " minute(s) " << seconds << " second(s)" << std::endl;
     }
