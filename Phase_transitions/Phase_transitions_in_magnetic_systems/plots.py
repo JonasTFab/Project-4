@@ -107,41 +107,48 @@ def d_plots(filename):
 #d_plots("4d_counted_energies_ordered2.txt")
 #plt.show()
 
-def e_plots(filename):
+def e_plots(filename,L,color):
     plt.figure(1)
-    plt.subplot(211)
+    ax1 = plt.subplot(211)
     dat = np.transpose(np.loadtxt(filename))
-    Temp,avg_e,h_capacity,susceptibility,avg_m = dat[0],dat[1],dat[2],dat[3],dat[4]
-    print(len(Temp))
-    plt.plot(Temp,avg_e/400/2,"r", label=("Average energy"))
+    Temp,avg_e,h_capacity,avg_m,susceptibility = dat[0],dat[1],dat[2],dat[3],dat[4]
+    plt.plot(Temp,avg_e,color)
+    box = ax1.get_position()
+    ax1.set_position([box.x0, box.y0+box.height*0.04, box.width, box.height])
     plt.grid()
     plt.legend()
     plt.ylabel("E")
-    plt.subplot(212)
-    plt.plot(Temp,avg_m,"g",label =("Average magnetization"))
+    ax2 = plt.subplot(212)
+    line = ax2.plot(Temp,avg_m,color,label= "L=%s"%L)#,label =("Average magnetization"))
     plt.xlabel("T")
     plt.ylabel("M")
-    plt.legend()
     plt.grid()
+    #plt.show()
+    box = ax2.get_position()
+    ax2.set_position([box.x0, box.y0+box.height*0.04, box.width, box.height])
+
+    # Put a legend to the right of the current axis
+    ax2.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2),ncol = 5,fancybox=True)
     #plt.show()
 
     plt.figure(2)
     plt.subplot(211)
-    plt.plot(Temp,h_capacity, "b",label = ("Heat capacity"))
+    plt.plot(Temp,h_capacity, "b")#,label = ("Heat capacity"))
     plt.xlabel("T")
     plt.ylabel("C_v")
     plt.grid()
     plt.legend()
     plt.subplot(212)
-    plt.plot(Temp,susceptibility,"black",label = ("Susceptibility"))
+    plt.plot(Temp,susceptibility,"black")#,label = ("Susceptibility"))
     plt.xlabel("T")
     plt.ylabel("\u03A7")
     plt.grid()
     plt.legend()
-    #plt.show()
 
-e_plots("4e_L40.txt")
-e_plots("4e_L60.txt")
-e_plots("4e_L80.txt")
-e_plots("4e_L100.txt")
+
+
+e_plots("4e_L40.txt","40","r")
+e_plots("4e_L60.txt","60","b")
+e_plots("4e_L80.txt","80","g")
+e_plots("4e_L100.txt","100","black")
 plt.show()
