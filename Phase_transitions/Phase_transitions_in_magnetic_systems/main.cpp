@@ -115,7 +115,7 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
   ave_energy_squared /= (double) MC_cycles;
   ave_mag /= (double) MC_cycles;
   ave_mag_squared /= (double) MC_cycles;
-
+  std::cout << ave_energy << std::endl;
 
   spec_heat_cap = (ave_energy_squared - ave_energy*ave_energy)/(k_b*T*T);
   susceptibility = (ave_mag_squared - ave_mag*ave_mag)/(k_b*T);
@@ -213,19 +213,19 @@ int main(int argc, char* argv[]){
     //  ising_model(L,Temp,matrix,num_cycles,arma::vec(num_cycles));
     //}
 
-    /*
-    ofile.close();
+
+    //ofile.close();
     arma::Mat<double> save_energies = arma::vec(MC_cycles); //vector will contain all energies and will be used to calculate probabilities
     arma::Mat<double> output_save_energies = ising_model(L,Temp,matrix,MC_cycles,save_energies);
-    std::string output_file = "4d_counted_energies_";
-    output_file.append(ordering);
-    output_file.append(std::to_string(int(Temp)));
-    output_file.append(".txt");
-    std::cout << output_file << std::endl;
-    ofile.open(output_file);
-    ofile <<  output_save_energies;
-    ofile.close();
-    */
+    //std::string output_file = "4d_counted_energies_";
+    //output_file.append(ordering);
+    //output_file.append(std::to_string(int(Temp)));
+    //output_file.append(".txt");
+    //std::cout << output_file << std::endl;
+    //ofile.open(output_file);
+    //ofile <<  output_save_energies;
+    //ofile.close();
+
 
   }
 

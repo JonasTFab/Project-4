@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 def c_plots(random_file,ordered_file):
     #split data random matrix in files into seperate types
@@ -108,19 +109,30 @@ def d_plots(filename):
 #plt.show()
 
 def e_plots(filename,L,color):
-    plt.figure(1)
-    ax1 = plt.subplot(211)
+    particles = (float(L)*float(L))
+    nu = 1
+    a = 1
+
     dat = np.transpose(np.loadtxt(filename))
     Temp,avg_e,h_capacity,avg_m,susceptibility = dat[0],dat[1],dat[2],dat[3],dat[4]
-    plt.plot(Temp,avg_e,color)
+    #smoothed_h_capacity = pd.rolling_mean(h_capacity,30) #take a moving average over 30 measurments
+    smoothed_h_capacity = pd.Series(h_capacity).rolling(window=5).mean()
+    idx = np.argmax(smoothed_h_capacity)
+    critical_T = Temp[idx]
+    Lattice_size = float(L)
+    T_C_infty = critical_T-a*Lattice_size**(-1/nu)
+    print(T_C_infty)
+
+    plt.figure(1)
+    ax1 = plt.subplot(211)
+    plt.plot(Temp,avg_e/particles,color)
     plt.title("Average energy and magnetization")
     box = ax1.get_position()
     ax1.set_position([box.x0, box.y0+box.height*0.04, box.width, box.height])
     plt.grid()
-    plt.legend()
     plt.ylabel("E")
     ax2 = plt.subplot(212)
-    line = ax2.plot(Temp,avg_m,color,label= "L=%s"%L)#,label =("Average magnetization"))
+    line = ax2.plot(Temp,avg_m/particles,color,label= "L=%s"%L)#,label =("Average magnetization"))
     plt.xlabel("T")
     plt.ylabel("M")
     plt.grid()
@@ -130,20 +142,19 @@ def e_plots(filename,L,color):
 
     # Put a legend to the right of the current axis
     ax2.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2),ncol = 5,fancybox=True)
-    #plt.show()
+
 
     plt.figure(2)
     ax3 = plt.subplot(211)
-    ax3.plot(Temp,h_capacity, color)#,label = ("Heat capacity"))
+    ax3.plot(Temp,h_capacity,'.',color = color)#,label = ("Heat capacity"))
+    plt.plot(Temp,smoothed_h_capacity,color = color)
     plt.ylabel("C_v")
     plt.grid()
-    plt.legend()
     ax4 = plt.subplot(212)
     plt.plot(Temp,susceptibility,color)#,label = ("Susceptibility"))
     plt.xlabel("T")
     plt.ylabel("\u03A7")
     plt.grid()
-    plt.legend()
 
 
 
