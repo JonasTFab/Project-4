@@ -70,7 +70,7 @@ def c_plots(random_file,ordered_file):
 #c_plots("MC_cycles_random_T24.txt","MC_cycles_ordered_T24.txt")
 #c_plots("MC_cycles_random_T1.txt","MC_cycles_ordered_T1.txt")
 
-def d_plots(filename):
+def d_plots(filename,color):
     plt.figure(6)
     counted_energies = np.loadtxt(filename)
     mean = counted_energies[0]
@@ -81,34 +81,40 @@ def d_plots(filename):
     x = list(filename.split('_')[3])
     b = x
     if b[0] == "r":
+        label = "Random"
+        sub_num = 1
         if b[6] == '1':
             T = 1
         else:
             T = 2.4
         title = ("P(E) for random matrix [T = %.1f]" %T)
     else:
+        sub_num = 2
+        label = "Odered"
         if b[7] == '1':
             T = 1
         else:
             T = 2.4
         title = ("P(E) for ordered matrix [T = %.1f]" %T)
-    plt.title(title)
-    plt.bar(unique, height = probabilities, width = 5)
+    plt.title("P(E) for ordered and random lattice [T = %.1f]" %T,fontsize=15)
+    plt.subplot(2,1,sub_num)
+    plt.bar(unique, height = probabilities, width = 5,color = color,label = label)
     plt.plot(np.linspace(mean,mean),np.linspace(0,max(probabilities)),"gold",label = "Average energy")
-    plt.plot(np.linspace(mean-sigma,mean+sigma,2),np.linspace(max(probabilities)/2,max(probabilities)/2,2),markersize = 20,marker ="|",color = "r",label = "Standard deviation")
-    plt.legend()
-    plt.ylabel('P')
-    plt.xlabel('Energy')
-    plt.show()
+    plt.plot(np.linspace(mean-sigma,mean+sigma,2),np.linspace(max(probabilities)/2,max(probabilities)/2,2),markersize = 20,marker ="|",color = "black",label = "Standard deviation")
+    plt.legend(fontsize=15)
+    plt.ylabel('P',fontsize=15)
     "Remember to write that the expectation value calculated in main is at the top of this"
 
 #average energy for this system -499.874
 "First two elements of the following files are 1. average energy, 2. variance"
-#d_plots("4d_counted_energies_random1.txt")
-#d_plots("4d_counted_energies_ordered1.txt")
-#d_plots("4d_counted_energies_random2.txt")
-#d_plots("4d_counted_energies_ordered2.txt")
-#plt.show()
+d_plots("4d_counted_energies_random1.txt",'b')
+d_plots("4d_counted_energies_ordered1.txt",'r')
+plt.xlabel('Energy')
+plt.show()
+d_plots("4d_counted_energies_random2.txt",'b')
+d_plots("4d_counted_energies_ordered2.txt",'r')
+plt.xlabel('Energy',fontsize=15)
+plt.show()
 
 def e_plots(filename,L,color):
     particles = (float(L)*float(L))
