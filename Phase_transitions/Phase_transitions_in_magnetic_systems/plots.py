@@ -78,6 +78,9 @@ def d_plots(filename,color):
     sigma = np.sqrt(variance)
     unique, counts = np.unique(counted_energies[4000:-1], return_counts=True)
     probabilities = counts/np.sum(counts)
+    min_idx = np.argmin(abs(mean-sigma - unique))
+    max_idx = np.argmin(abs(mean+sigma -unique))
+    print(np.sum(probabilities[min_idx:max_idx]))
     x = list(filename.split('_')[3])
     b = x
     if b[0] == "r":
@@ -96,12 +99,12 @@ def d_plots(filename,color):
         else:
             T = 2.4
         title = ("P(E) for ordered matrix [T = %.1f]" %T)
-    plt.title("P(E) for ordered and random lattice [T = %.1f]" %T,fontsize=15)
+    plt.title("P(E) for ordered and random lattice [T = %.1f]" %T,fontsize=16)
     plt.subplot(2,1,sub_num)
     plt.bar(unique, height = probabilities, width = 5,color = color,label = label)
-    plt.plot(np.linspace(mean,mean),np.linspace(0,max(probabilities)),"gold",label = "Average energy")
-    plt.plot(np.linspace(mean-sigma,mean+sigma,2),np.linspace(max(probabilities)/2,max(probabilities)/2,2),markersize = 20,marker ="|",color = "black",label = "Standard deviation")
-    plt.legend(fontsize=15)
+    plt.plot(np.linspace(mean,mean),np.linspace(0,max(probabilities)),"gold",label = "Average energy",linewidth = 3)
+    plt.plot(np.linspace(mean-sigma,mean+sigma,2),np.linspace(max(probabilities)/2,max(probabilities)/2,2),markersize = 20,marker ="|",color = "black",label = "Standard deviation",linewidth = 3)
+    plt.legend(fontsize=10)
     plt.ylabel('P',fontsize=15)
     "Remember to write that the expectation value calculated in main is at the top of this"
 
