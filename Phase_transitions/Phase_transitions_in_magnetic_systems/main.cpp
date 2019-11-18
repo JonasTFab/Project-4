@@ -76,14 +76,11 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
     }
   }
 
-  //double ave_energy = 0;
   double ave_energy_squared = 0;
-  //double ave_mag = 0;
   double ave_mag_squared = 0;
 
   //The Metropolis Algorithm
-  //for (int i = 0; i < MC_cycles; i++){      // without MPI
-  for (int i = 0; i < MC_cycles; i++){      // with MPI
+  for (int i = 0; i < MC_cycles; i++){
     for (int s=0; s < N; s++){
       int random_x = dis(generator);//random i index to flip
       int random_y = dis(generator);//random j index to flip
@@ -94,7 +91,6 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
       spin_matrix(random_x,periodic(random_y,L,-1)) +
       spin_matrix(random_x,periodic(random_y,L,1)));
 
-      //std::cout << delta_energy << std::endl;
       if (r_dis(generator) <= w(delta_energy + 8)) {
         spin_matrix(random_x,random_y) *= (-1);
         energy += delta_energy;
@@ -115,7 +111,6 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
   ave_energy_squared /= (double) MC_cycles;
   ave_mag /= (double) MC_cycles;
   ave_mag_squared /= (double) MC_cycles;
-  std::cout << ave_energy << std::endl;
 
   spec_heat_cap = (ave_energy_squared - ave_energy*ave_energy)/(k_b*T*T);
   susceptibility = (ave_mag_squared - ave_mag*ave_mag)/(k_b*T);
@@ -127,28 +122,65 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
   std::cout << "Specific heat capacity:                    " << spec_heat_cap << std::endl;
   std::cout << "Average magnetization:                     " << ave_mag << std::endl;
   std::cout << "Average magnetization squared:             " << ave_mag_squared << std::endl;
-  std::cout << "Susceptibility:                            " << susceptibility << "\n\n";*/
+  std::cout << "Susceptibility:                            " << susceptibility << "\n\n";
+  */
 
-  // Analytic solution of mean energy, mean
-  // energy squared, mean magnetization and
-  // mean magnetization squared
-  double Z = 2*exp(-8*beta*J) + 2*exp(8*beta*J) + 12;
-  double an_ave_energy = -(16*J/Z) * (exp(8*beta*J) - exp(-8*beta*J));
-  double an_ave_energy_squared = (128*J*J/Z) * (exp(8*beta*J) + exp(-8*beta*J));
-  double an_ave_mag = (8*exp(8*beta*J) + 16) / Z;
-  double an_ave_mag_squared = (32*exp(8*beta*J) + 32) / Z;
-  double an_spec_heat_cap = (1/(k_b*T*T)) * (an_ave_energy_squared - an_ave_energy*an_ave_energy);
-  double an_susceptibility = (1/(k_b*T)) * (an_ave_mag_squared - an_ave_mag*an_ave_mag);
+  if (L==2){
+    // Analytic solution of mean energy, mean energy squared, mean
+    // magnetization and mean magnetization squared for the special case L=2
+    double Z = 2*exp(-8*beta*J) + 2*exp(8*beta*J) + 12;
+    double an_ave_energy = -(16*J/Z) * (exp(8*beta*J) - exp(-8*beta*J));
+    double an_ave_energy_squared = (128*J*J/Z) * (exp(8*beta*J) + exp(-8*beta*J));
+    double an_ave_mag = (8*exp(8*beta*J) + 16) / Z;
+    double an_ave_mag_squared = (32*exp(8*beta*J) + 32) / Z;
+    double an_spec_heat_cap = (1/(k_b*T*T)) * (an_ave_energy_squared - an_ave_energy*an_ave_energy);
+    double an_susceptibility = (1/(k_b*T)) * (an_ave_mag_squared - an_ave_mag*an_ave_mag);
+    /*
+    std::cout << "Analytic average energy (L=2):                   " << an_ave_energy << std::endl;
+    std::cout << "Analytic average energy squared (L=2):           " << an_ave_energy_squared << std::endl;
+    std::cout << "Analytic specific heat capacity (L=2):           " << an_spec_heat_cap << std::endl;
+    std::cout << "Analytic average magnetization (L=2):            " << an_ave_mag << std::endl;
+    std::cout << "Analytic average magnetization squared (L=2):    " << an_ave_mag_squared << std::endl;
+    std::cout << "Analytic susceptibility (L=2):                   " << an_susceptibility << "\n\n";
+    */
+
+    // Unit testing: tests if the numerical calculation are more or less
+    // equal to the analytical solution. The error is set relatively high because
+    // we are working we random number distribution which basically never gets
+    // the exact same results as the analytical solution.
+    double eps = 0.5;
+    double diff_energy = fabs(fabs(ave_energy)-fabs(an_ave_energy));
+    double diff_mag = fabs(fabs(ave_mag)-fabs(an_ave_mag));
+    double diff_shc = fabs(fabs(spec_heat_cap)-fabs(an_spec_heat_cap));
+    double diff_sus = fabs(fabs(susceptibility)-fabs(an_susceptibility));
+    if (diff_energy > eps){
+      std::string msg = "The difference in analytical and numerical average energy is larger than: ";
+      std::cout << msg << eps << " Difference is: " << diff_energy << std::endl;
+      }
+    else if (diff_mag > eps){
+      std::string msg = "The difference in analytical and numerical average magnetization is larger than: ";
+      std::cout << msg << eps << " Difference is: " << diff_mag << std::endl;
+      }
+    else if (diff_shc > eps){
+      std::string msg = "The difference in analytical and numerical specific heat capacity is larger than: ";
+      std::cout << msg << eps << " Difference is: " << diff_shc << std::endl;
+      }
+    else if (diff_mag > eps){
+      std::string msg = "The difference in analytical and numerical average magnetization is larger than: ";
+      std::cout << msg << eps << " Difference is: " << diff_mag << std::endl;
+      }
+    else{
+      std::string msg = "Unit test complete! The algorithm works just fine for L=2, Thumbs up! We may now assume it works for any L.";
+      std::cout << msg << std::endl;
+    }
+
+    }
+
+
+
   /*
-  std::cout << "Analytic average energy:                   " << an_ave_energy << std::endl;
-  std::cout << "Analytic average energy squared:           " << an_ave_energy_squared << std::endl;
-  std::cout << "Analytic specific heat capacity:           " << an_spec_heat_cap << std::endl;
-  std::cout << "Analytic average magnetization:            " << an_ave_mag << std::endl;
-  std::cout << "Analytic average magnetization squared:    " << an_ave_mag_squared << std::endl;
-  std::cout << "Analytic susceptibility:                   " << an_susceptibility << "\n\n";*/
-
-
-  /*
+  // Writes to file. Used for storing the computed data for
+  // increasing value of Monte Carlo cycles
   ofile << std::setw(15) << std::setprecision(10) << T;
   ofile << std::setw(15) << std::setprecision(10) << MC_cycles;
   ofile << std::setw(15) << std::setprecision(10) << ave_energy;
@@ -157,7 +189,7 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
   ofile << std::setw(15) << std::setprecision(10) << ave_mag_squared;
   ofile << std::setw(15) << std::setprecision(10) << accepted_configs;
   ofile << "\n";*/
-  //std::cout << energy << std::endl;
+
   return save_energies;
 } // end of function ising_model()
 
@@ -177,6 +209,11 @@ int main(int argc, char* argv[]){
   std::string ordering = argv[3];
   int MC_cycles = atoi(argv[4]);
   std::string fileout;
+
+  double ave_energy;
+  double spec_heat_cap;
+  double ave_mag;
+  double susceptibility;
 
   if (Temp != 0){
     std::mt19937 generator (time(NULL));   //seed rng with time now
@@ -200,6 +237,7 @@ int main(int argc, char* argv[]){
 
     ofile.open(fileout);
     arma::Mat<double> matrix = spin_system(L,ordering,generator);
+    /*
     ofile << std::setiosflags(std::ios::showpoint | std::ios::uppercase);
     ofile << std::setw(15)  << "Temp:";
     ofile << std::setw(15)  << "MC_cycles:";
@@ -208,24 +246,35 @@ int main(int argc, char* argv[]){
     ofile << std::setw(15)  << "Avg_mag:";
     ofile << std::setw(15)  << "Avg_mag^2:";
     ofile << std::setw(15)  << "accepted conf:\n";
+    */
 
+    // Testing our algorithm for increasing size of Monte Carlo cycles.
+    // Then store in a text file for plotting using Python
     //for (int num_cycles = 100; num_cycles <= MC_cycles; num_cycles += 100){
-    //  ising_model(L,Temp,matrix,num_cycles,arma::vec(num_cycles));
+    //  arma::Mat<double> save_energies = arma::vec(MC_cycles);
+    //  ising_model(L,Temp,matrix,MC_cycles,save_energies,
+    //          ave_energy, spec_heat_cap, ave_mag, susceptibility, generator);
     //}
 
-    /*
-    ofile.close();
-    arma::Mat<double> save_energies = arma::vec(MC_cycles); //vector will contain all energies and will be used to calculate probabilities
-    arma::Mat<double> output_save_energies = ising_model(L,Temp,matrix,MC_cycles,save_energies);
-    std::string output_file = "4d_counted_energies_";
-    output_file.append(ordering);
-    output_file.append(std::to_string(int(Temp)));
-    output_file.append(".txt");
-    std::cout << output_file << std::endl;
-    ofile.open(output_file);
-    ofile <<  output_save_energies;
-    ofile.close();
-    */
+
+    //ofile.close();
+    arma::Mat<double> save_energies = arma::vec(MC_cycles); //vector contains all energies and will be used to calculate probabilities
+    // Starting the algorithm with a unit test (L=2)
+    arma::Mat<double> output_save_energies_test = ising_model(2,Temp,matrix,MC_cycles,save_energies,
+                                  ave_energy, spec_heat_cap, ave_mag, susceptibility, generator);
+    arma::Mat<double> output_save_energies = ising_model(L,Temp,matrix,MC_cycles,save_energies,
+                                  ave_energy, spec_heat_cap, ave_mag, susceptibility, generator);
+
+    //std::string output_file = "4d_counted_energies_";
+    //output_file.append(ordering);
+    //output_file.append(std::to_string(int(Temp)));
+    //output_file.append(".txt");
+    //std::cout << output_file << std::endl;
+    //ofile.open(output_file);
+    //ofile <<  output_save_energies;
+    //ofile.close();
+
+
 
   }
 
@@ -265,16 +314,20 @@ int main(int argc, char* argv[]){
 
     double *quantity_vec = new double [n_array];
     double *new_quantity_vec = new double [n_array];
-
-    double ave_energy;
-    double spec_heat_cap;
-    double ave_mag;
-    double susceptibility;
     //double rank_T = Temp_vec(proc_rank+num_procs*i);
     double rank_T;
 
     int old_work_done = 0;
     double time_start = MPI_Wtime();
+
+    if (proc_rank==0){        // unit test: testing if the algorithm works for L=2
+      int test_L = 2;
+      double test_temp = 2;
+      arma::Mat<double> matrix = spin_system(test_L,ordering,generator);
+      arma::Mat<double> output_save_energies = ising_model(test_L,test_temp,matrix,MC_cycles,arma::vec(MC_cycles),
+                                    ave_energy, spec_heat_cap, ave_mag, susceptibility, generator);
+    }
+
     for (double i=T_min; i<= T_max; i += delta_T){
       arma::Mat<double> matrix = spin_system(L,ordering,generator);
 
@@ -322,60 +375,3 @@ int main(int argc, char* argv[]){
 
   }
 } // end of function main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* JUNK
-
-arma::Mat<double> new_spin_matrix = spin_matrix;
-new_spin_matrix(random_x,random_y) *= (-1);//new lattice with one randomly flipped spin
-  new_energy = new_spin_matrix(random_x,random_y)*
-  (new_spin_matrix(periodic(random_x,L,-1),random_y) +
-  new_spin_matrix(periodic(random_x,L,1),random_y) +
-  new_spin_matrix(random_x,periodic(random_y,L,-1)) +
-  new_spin_matrix(random_x,periodic(random_y,L,1)));
-
-
-  // Sjekk Coding energy differences på side 16 i statphys
-  for (int i=0; i<=M; i++){
-    //w(i) = -8*J + 16*i/M;
-  }
-
-  //std::cout << energy << std::endl;
-  if (delta_energy <= 0){
-    spin_matrix = new_spin_matrix;
-    energy = new_energy;
-  }
-  else{
-    w(i) = exp(-beta*delta_energy); //this can be precalculated, how?
-    double r = r_dis(generator);
-    if (r <= w(i)){
-      spin_matrix = new_spin_matrix;
-      energy = new_energy;
-    }
-  }
-
-
-  else{
-    w(i) = exp(-beta*delta_energy); //this can be precalculated, how?
-    double r = r_dis(generator);
-    if (r <= w(i)){
-      spin_matrix(random_x,random_y) *= (-1);
-     }
-std::cout << energy << std::endl;
-
-*/
