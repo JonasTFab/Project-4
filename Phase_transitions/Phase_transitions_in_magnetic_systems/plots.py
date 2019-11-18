@@ -189,10 +189,10 @@ Tc_vals = np.array([T_40,T_60,T_80,T_100])
 
 lin_fit = np.polyfit(Tc_vals/L_size,Tc_vals,1)
 a = lin_fit[0]
-print(lin_fit)
+#print(lin_fit)
 x = np.linspace(-0.01,0.055,100)
 critical_T = a*L_size**(-nu)+Tc_vals
-print(critical_T)
+#print(critical_T)
 plt.plot(Tc_vals/L_size,Tc_vals,"o",color = "r")
 plt.plot(x,lin_fit[0]*x +lin_fit[1])
 plt.grid()
