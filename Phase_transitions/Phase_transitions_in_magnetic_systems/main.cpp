@@ -76,14 +76,11 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
     }
   }
 
-  //double ave_energy = 0;
   double ave_energy_squared = 0;
-  //double ave_mag = 0;
   double ave_mag_squared = 0;
 
   //The Metropolis Algorithm
-  //for (int i = 0; i < MC_cycles; i++){      // without MPI
-  for (int i = 0; i < MC_cycles; i++){      // with MPI
+  for (int i = 0; i < MC_cycles; i++){
     for (int s=0; s < N; s++){
       int random_x = dis(generator);//random i index to flip
       int random_y = dis(generator);//random j index to flip
@@ -94,7 +91,6 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
       spin_matrix(random_x,periodic(random_y,L,-1)) +
       spin_matrix(random_x,periodic(random_y,L,1)));
 
-      //std::cout << delta_energy << std::endl;
       if (r_dis(generator) <= w(delta_energy + 8)) {
         spin_matrix(random_x,random_y) *= (-1);
         energy += delta_energy;
@@ -126,7 +122,8 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
   std::cout << "Specific heat capacity:                    " << spec_heat_cap << std::endl;
   std::cout << "Average magnetization:                     " << ave_mag << std::endl;
   std::cout << "Average magnetization squared:             " << ave_mag_squared << std::endl;
-  std::cout << "Susceptibility:                            " << susceptibility << "\n\n";*/
+  std::cout << "Susceptibility:                            " << susceptibility << "\n\n";
+  */
 
   if (L==2){
     // Analytic solution of mean energy, mean energy squared, mean
@@ -180,7 +177,10 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
     }
 
 
+
   /*
+  // Writes to file. Used for storing the computed data for
+  // increasing value of Monte Carlo cycles
   ofile << std::setw(15) << std::setprecision(10) << T;
   ofile << std::setw(15) << std::setprecision(10) << MC_cycles;
   ofile << std::setw(15) << std::setprecision(10) << ave_energy;
@@ -189,7 +189,7 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
   ofile << std::setw(15) << std::setprecision(10) << ave_mag_squared;
   ofile << std::setw(15) << std::setprecision(10) << accepted_configs;
   ofile << "\n";*/
-  //std::cout << energy << std::endl;
+
   return save_energies;
 } // end of function ising_model()
 
@@ -248,15 +248,23 @@ int main(int argc, char* argv[]){
     ofile << std::setw(15)  << "accepted conf:\n";
     */
 
+    // Testing our algorithm for increasing size of Monte Carlo cycles.
+    // Then store in a text file for plotting using Python
     //for (int num_cycles = 100; num_cycles <= MC_cycles; num_cycles += 100){
-    //  ising_model(L,Temp,matrix,num_cycles,arma::vec(num_cycles));
+    //  arma::Mat<double> save_energies = arma::vec(MC_cycles);
+    //  ising_model(L,Temp,matrix,MC_cycles,save_energies,
+    //          ave_energy, spec_heat_cap, ave_mag, susceptibility, generator);
     //}
 
 
     //ofile.close();
-    arma::Mat<double> save_energies = arma::vec(MC_cycles); //vector will contain all energies and will be used to calculate probabilities
+    arma::Mat<double> save_energies = arma::vec(MC_cycles); //vector contains all energies and will be used to calculate probabilities
+    // Starting the algorithm with a unit test (L=2)
+    arma::Mat<double> output_save_energies_test = ising_model(2,Temp,matrix,MC_cycles,save_energies,
+                                  ave_energy, spec_heat_cap, ave_mag, susceptibility, generator);
     arma::Mat<double> output_save_energies = ising_model(L,Temp,matrix,MC_cycles,save_energies,
                                   ave_energy, spec_heat_cap, ave_mag, susceptibility, generator);
+
     //std::string output_file = "4d_counted_energies_";
     //output_file.append(ordering);
     //output_file.append(std::to_string(int(Temp)));
@@ -311,6 +319,15 @@ int main(int argc, char* argv[]){
 
     int old_work_done = 0;
     double time_start = MPI_Wtime();
+
+    if (proc_rank==0){        // unit test: testing if the algorithm works for L=2
+      int test_L = 2;
+      double test_temp = 2;
+      arma::Mat<double> matrix = spin_system(test_L,ordering,generator);
+      arma::Mat<double> output_save_energies = ising_model(test_L,test_temp,matrix,MC_cycles,arma::vec(MC_cycles),
+                                    ave_energy, spec_heat_cap, ave_mag, susceptibility, generator);
+    }
+
     for (double i=T_min; i<= T_max; i += delta_T){
       arma::Mat<double> matrix = spin_system(L,ordering,generator);
 
