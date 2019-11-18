@@ -27,48 +27,48 @@ def c_plots(random_file,ordered_file):
 
     plt.figure(1)#plt.subplot(211)
     plt.title("Average energy (T = %.1f)" %((T[0])))
-    plt.plot(num_cycles, ave_energy_o,label = "Ordered matrix",color = 'g')
+    plt.plot(num_cycles, ave_energy_o/num_particles,label = "Ordered matrix",color='g',linewidth=1)
     #plt.ylabel("E")
     #plt.grid()
     #plt.legend()
     #plt.subplot(212)
-    plt.plot(num_cycles,ave_energy_r, label = "Random matrix",color = 'r')
+    plt.plot(num_cycles,ave_energy_r/num_particles, label = "Random matrix",color = 'r',linewidth=1)
     plt.xlabel('Monte Carlo Cycles')
     plt.ylabel("E")
     plt.grid()
-    plt.legend()
+    plt.legend(fontsize=10)
     #plt.show()
 
     plt.figure(2)#plt.subplot(211)
     plt.title("Average magnetization(T = %.1f)" %((T[0])))
-    plt.plot(num_cycles, ave_mag_o,label = "Ordered matrix",color = 'g')
+    plt.plot(num_cycles, ave_mag_o/num_particles,label = "Ordered matrix",color = 'g',linewidth=1)
     #plt.ylabel("M")
     #plt.grid()
     #plt.legend()
     #plt.subplot(212)
-    plt.plot(num_cycles,ave_mag_r,label = "Random matrix",color = 'r')
+    plt.plot(num_cycles,ave_mag_r/num_particles,label = "Random matrix",color = 'r',linewidth=1)
     plt.xlabel("Monte Carlo Cycles")
     plt.ylabel("M")
     plt.grid()
-    plt.legend()
+    plt.legend(fontsize=10)
     #plt.show()
 
     plt.figure(3)#plt.subplot(211)
     plt.title("Accepted configurations[Ac](T = %.1f)" %((T[0])))
-    plt.plot(num_cycles, accepted_configs_o,label = "Ordered matrix",color = 'g')
+    plt.plot(num_cycles, accepted_configs_o,label = "Ordered matrix",color = 'g',linewidth=1)
     #plt.ylabel("Ac")
     #plt.grid()
     #plt.legend()
     #plt.subplot(212)
-    plt.plot(num_cycles,accepted_configs_r,label = "Random matrix",color = 'r')
+    plt.plot(num_cycles,accepted_configs_r,label = "Random matrix",color = 'r',linewidth=1)
     plt.xlabel("Monte Carlo Cycles")
-    plt.ylabel("Ac")
+    plt.ylabel("Accepts")
     plt.grid()
-    plt.legend()
+    plt.legend(fontsize=10)
     plt.show()
 
-#c_plots("MC_cycles_random_T24.txt","MC_cycles_ordered_T24.txt")
-#c_plots("MC_cycles_random_T1.txt","MC_cycles_ordered_T1.txt")
+c_plots("MC_cycles_random_T24.txt","MC_cycles_ordered_T24.txt")
+c_plots("MC_cycles_random_T1.txt","MC_cycles_ordered_T1.txt")
 
 def d_plots(filename,color):
     plt.figure(6)
@@ -110,6 +110,7 @@ def d_plots(filename,color):
 
 #average energy for this system -499.874
 "First two elements of the following files are 1. average energy, 2. variance"
+"""
 d_plots("4d_counted_energies_random1.txt",'b')
 d_plots("4d_counted_energies_ordered1.txt",'r')
 plt.xlabel('Energy')
@@ -118,6 +119,7 @@ d_plots("4d_counted_energies_random2.txt",'b')
 d_plots("4d_counted_energies_ordered2.txt",'r')
 plt.xlabel('Energy',fontsize=15)
 plt.show()
+"""
 
 def e_plots(filename,L,color):
     particles = (float(L)*float(L))
@@ -175,13 +177,14 @@ def e_plots(filename,L,color):
     ax4.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2),ncol = 5,fancybox=True,fontsize=15)
     return(critical_T)
 
-
+"""
 T_40 = e_plots("4e_L40.txt","40","r")
 T_60 = e_plots("4e_L60.txt","60","b")
 T_80 = e_plots("4e_L80.txt","80","g")
 T_100 = e_plots("4e_L100.txt","100","black")
-
 plt.show()
+"""
+
 
 def lin_reg():
     nu = 1.
@@ -198,4 +201,4 @@ def lin_reg():
     plt.plot(x,lin_fit[0]*x +lin_fit[1])
     plt.grid()
     plt.show()
-#ling_reg()
+#lin_reg()
