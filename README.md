@@ -1,2 +1,5 @@
-# Project-4
-Project 4 in computational physics
+# Phase Transitions in Magnetic Systems
+
+This project is mainly focused on how a phase transition in a magnetic system develops as the temperature increases. The algorithm is based on the Markov Chain Monte Carlo method which is called the Metropolis algorithm. Our code is tested for relatively small Monte Carlo cycles before going up to 100 000 cycles. Because of large amount of iterations, parallelization are introduced for optimization.
+
+The operations are computed using C++ as the tool of choice with MPI compiler for parallelization. This coise was made as C++ tends to faster than Python. The code including the algorithm is found in the folder Phase_transitions/Phase_transitions_in_magnetic_systems/ as main.cpp. Because of the heavy domputations, data are stored in seperate text files which is found in the subfolder data_and_plots. As the name implies, the data are plotted with Python using MatPlotLib. The .py file that plots any stored values named plots.py is also found in this folder.
