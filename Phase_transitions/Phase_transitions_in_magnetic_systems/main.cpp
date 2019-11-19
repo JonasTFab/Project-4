@@ -16,7 +16,7 @@
 //mpiexec -n 2 ./main_mpi.x
 
 double J = 1;
-double k_b = 1;//.38064852e-23;
+double k_b = 1;
 //std::mt19937 generator (time(NULL)); //seed rng with time now
 //output files
 std::ofstream ofile;
@@ -26,8 +26,8 @@ inline int periodic(int i, int limit, int add) {
   return (i+limit+add) % (limit);
 }
 
-
-int spin(std::mt19937 &generator){ //generate random spins up or down with mersenne twister
+//generate random spins up or down with mersenne twister
+int spin(std::mt19937 &generator){
   std::uniform_real_distribution<double> dis(0.0, 1.0);
   double ran_nr = dis(generator);
   double divide = 0.5;
@@ -41,6 +41,7 @@ int spin(std::mt19937 &generator){ //generate random spins up or down with merse
       }
 } // end of function spin()
 
+// initializing the random generated spin matrix
 arma::Mat<double> spin_system(int L,std::string ordering, std::mt19937 &generator){ //set up the lattice of spins with random spins up or down
   arma::Mat<double> spin_matrix = arma::mat(L, L,arma::fill::ones);
   if (ordering == "random"){
@@ -54,6 +55,7 @@ arma::Mat<double> spin_system(int L,std::string ordering, std::mt19937 &generato
   return spin_matrix;
 } // end of function spin_system()
 
+// Ising model
 arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles, arma::vec save_energies,
             double &ave_energy, double &spec_heat_cap, double &ave_mag, double &susceptibility, std::mt19937 generator){
   std::uniform_real_distribution<double> dis(-1, L); //chose a random spin to flip
@@ -116,14 +118,14 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
   susceptibility = (ave_mag_squared - ave_mag*ave_mag)/(k_b*T);
   save_energies(0) = ave_energy;
   save_energies(1) = spec_heat_cap*(k_b*T*T);
-  /*
+
   std::cout << "Average energy:                            " << ave_energy << std::endl;
   std::cout << "Average energy squared:                    " << ave_energy_squared << std::endl;
   std::cout << "Specific heat capacity:                    " << spec_heat_cap << std::endl;
   std::cout << "Average magnetization:                     " << ave_mag << std::endl;
   std::cout << "Average magnetization squared:             " << ave_mag_squared << std::endl;
   std::cout << "Susceptibility:                            " << susceptibility << "\n\n";
-  */
+
 
   if (L==2){
     // Analytic solution of mean energy, mean energy squared, mean
@@ -145,31 +147,35 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
     */
 
     // Unit testing: tests if the numerical calculation are more or less
-    // equal to the analytical solution. The error is set relatively high because
+    // equal the analytical solution. The error is set relatively high because
     // we are working we random number distribution which basically never gets
-    // the exact same results as the analytical solution.
-    double eps = 0.5;
+    // the exact same results as the analytical solution unless lattice is very high.
+    double p = 10;
+    double eps_e = fabs(an_ave_energy/100);
+    double eps_m = fabs(an_ave_mag/100);
+    double eps_c = p*fabs(an_spec_heat_cap/100);
+    double eps_x = p*fabs(an_susceptibility/100);
     double diff_energy = fabs(fabs(ave_energy)-fabs(an_ave_energy));
     double diff_mag = fabs(fabs(ave_mag)-fabs(an_ave_mag));
     double diff_shc = fabs(fabs(spec_heat_cap)-fabs(an_spec_heat_cap));
     double diff_sus = fabs(fabs(susceptibility)-fabs(an_susceptibility));
-    if (diff_energy > eps){
+    if (diff_energy > eps_e){
       std::string msg = "The difference in analytical and numerical average energy is larger than: ";
-      std::cout << msg << eps << " Difference is: " << diff_energy << std::endl;
+      std::cout << msg << eps_e << " Difference is: " << diff_energy << std::endl;
       }
-    else if (diff_mag > eps){
+    if (diff_mag > eps_m){
       std::string msg = "The difference in analytical and numerical average magnetization is larger than: ";
-      std::cout << msg << eps << " Difference is: " << diff_mag << std::endl;
+      std::cout << msg << eps_m << " Difference is: " << diff_mag << std::endl;
       }
-    else if (diff_shc > eps){
+    if (diff_shc > eps_c){
       std::string msg = "The difference in analytical and numerical specific heat capacity is larger than: ";
-      std::cout << msg << eps << " Difference is: " << diff_shc << std::endl;
+      std::cout << msg << eps_c << " Difference is: " << diff_shc << std::endl;
       }
-    else if (diff_sus > eps){
+    if (diff_sus > eps_x){
       std::string msg = "The difference in analytical and numerical susceptibility is larger than: ";
-      std::cout << msg << eps << " Difference is: " << diff_sus << std::endl;
+      std::cout << msg << eps_x << " Difference is: " << diff_sus << std::endl;
       }
-    else{
+    if (diff_sus < eps_x && diff_mag < eps_m && diff_shc < eps_c && diff_sus < eps_x){
       std::string msg = "Unit test complete! The algorithm works just fine for L=2, Thumbs up! We may now assume it works for any L.";
       std::cout << msg << std::endl;
     }
