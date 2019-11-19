@@ -26,8 +26,8 @@ inline int periodic(int i, int limit, int add) {
   return (i+limit+add) % (limit);
 }
 
-
-int spin(std::mt19937 &generator){ //generate random spins up or down with mersenne twister
+//generate random spins up or down with mersenne twister
+int spin(std::mt19937 &generator){
   std::uniform_real_distribution<double> dis(0.0, 1.0);
   double ran_nr = dis(generator);
   double divide = 0.5;
@@ -41,6 +41,7 @@ int spin(std::mt19937 &generator){ //generate random spins up or down with merse
       }
 } // end of function spin()
 
+// initializing the random generated spin matrix
 arma::Mat<double> spin_system(int L,std::string ordering, std::mt19937 &generator){ //set up the lattice of spins with random spins up or down
   arma::Mat<double> spin_matrix = arma::mat(L, L,arma::fill::ones);
   if (ordering == "random"){
@@ -54,6 +55,7 @@ arma::Mat<double> spin_system(int L,std::string ordering, std::mt19937 &generato
   return spin_matrix;
 } // end of function spin_system()
 
+// Ising model
 arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cycles, arma::vec save_energies,
             double &ave_energy, double &spec_heat_cap, double &ave_mag, double &susceptibility, std::mt19937 generator){
   std::uniform_real_distribution<double> dis(-1, L); //chose a random spin to flip
@@ -116,14 +118,14 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
   susceptibility = (ave_mag_squared - ave_mag*ave_mag)/(k_b*T);
   save_energies(0) = ave_energy;
   save_energies(1) = spec_heat_cap*(k_b*T*T);
-  /*
+
   std::cout << "Average energy:                            " << ave_energy << std::endl;
   std::cout << "Average energy squared:                    " << ave_energy_squared << std::endl;
   std::cout << "Specific heat capacity:                    " << spec_heat_cap << std::endl;
   std::cout << "Average magnetization:                     " << ave_mag << std::endl;
   std::cout << "Average magnetization squared:             " << ave_mag_squared << std::endl;
   std::cout << "Susceptibility:                            " << susceptibility << "\n\n";
-  */
+
 
   if (L==2){
     // Analytic solution of mean energy, mean energy squared, mean
