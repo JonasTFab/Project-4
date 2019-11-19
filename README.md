@@ -10,3 +10,4 @@ Example of compilation and execution:
 
 georgestanleycowie$ mpicxx -O3 -o main_mpi.x  main.cpp -std=c++11
 georgestanleycowie$ mpiexec -n 2 ./main_mpi.x 60 0 random 100000
+
