@@ -16,7 +16,7 @@
 //mpiexec -n 2 ./main_mpi.x
 
 double J = 1;
-double k_b = 1;//.38064852e-23;
+double k_b = 1;
 //std::mt19937 generator (time(NULL)); //seed rng with time now
 //output files
 std::ofstream ofile;
@@ -145,31 +145,35 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
     */
 
     // Unit testing: tests if the numerical calculation are more or less
-    // equal to the analytical solution. The error is set relatively high because
+    // equal the analytical solution. The error is set relatively high because
     // we are working we random number distribution which basically never gets
-    // the exact same results as the analytical solution.
-    double eps = 0.5;
+    // the exact same results as the analytical solution unless lattice is very high.
+    double p = 10;
+    double eps_e = fabs(an_ave_energy/100);
+    double eps_m = fabs(an_ave_mag/100);
+    double eps_c = p*fabs(an_spec_heat_cap/100);
+    double eps_x = p*fabs(an_susceptibility/100);
     double diff_energy = fabs(fabs(ave_energy)-fabs(an_ave_energy));
     double diff_mag = fabs(fabs(ave_mag)-fabs(an_ave_mag));
     double diff_shc = fabs(fabs(spec_heat_cap)-fabs(an_spec_heat_cap));
     double diff_sus = fabs(fabs(susceptibility)-fabs(an_susceptibility));
-    if (diff_energy > eps){
+    if (diff_energy > eps_e){
       std::string msg = "The difference in analytical and numerical average energy is larger than: ";
-      std::cout << msg << eps << " Difference is: " << diff_energy << std::endl;
+      std::cout << msg << eps_e << " Difference is: " << diff_energy << std::endl;
       }
-    else if (diff_mag > eps){
+    if (diff_mag > eps_m){
       std::string msg = "The difference in analytical and numerical average magnetization is larger than: ";
-      std::cout << msg << eps << " Difference is: " << diff_mag << std::endl;
+      std::cout << msg << eps_m << " Difference is: " << diff_mag << std::endl;
       }
-    else if (diff_shc > eps){
+    if (diff_shc > eps_c){
       std::string msg = "The difference in analytical and numerical specific heat capacity is larger than: ";
-      std::cout << msg << eps << " Difference is: " << diff_shc << std::endl;
+      std::cout << msg << eps_c << " Difference is: " << diff_shc << std::endl;
       }
-    else if (diff_sus > eps){
+    if (diff_sus > eps_x){
       std::string msg = "The difference in analytical and numerical susceptibility is larger than: ";
-      std::cout << msg << eps << " Difference is: " << diff_sus << std::endl;
+      std::cout << msg << eps_x << " Difference is: " << diff_sus << std::endl;
       }
-    else{
+    if (diff_sus < eps_x && diff_mag < eps_m && diff_shc < eps_c && diff_sus < eps_x){
       std::string msg = "Unit test complete! The algorithm works just fine for L=2, Thumbs up! We may now assume it works for any L.";
       std::cout << msg << std::endl;
     }
