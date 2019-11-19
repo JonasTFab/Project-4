@@ -194,11 +194,17 @@ def lin_reg():
     lin_fit = np.polyfit(Tc_vals/L_size,Tc_vals,1)
     a = lin_fit[0]
     print(lin_fit)
-    x = np.linspace(-0.01,0.055,100)
+    x = np.linspace(0,0.055,100)
     critical_T = a*L_size**(-nu)+Tc_vals
     print(critical_T)
-    plt.plot(Tc_vals/L_size,Tc_vals,"o",color = "r")
-    plt.plot(x,lin_fit[0]*x +lin_fit[1])
+
+    plt.plot(Tc_vals/L_size,Tc_vals,"o",color = "g", label = '$T_C(L)$')
+    plt.plot(x,lin_fit[0]*x +lin_fit[1],label = 'Regression')
+    plt.plot(0,2.26019167,'*',label = "$T_C(\infty)$)",color = "r",markersize = 10,linewidth = 10)
     plt.grid()
+    plt.xlabel('T/L')
+    plt.ylabel('T')
+    plt.title('Critical Temperature')
+    plt.legend(fontsize = 13)
     plt.show()
 lin_reg()
