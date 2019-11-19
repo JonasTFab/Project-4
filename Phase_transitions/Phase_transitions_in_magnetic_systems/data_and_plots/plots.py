@@ -177,13 +177,13 @@ def e_plots(filename,L,color):
     ax4.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2),ncol = 5,fancybox=True,fontsize=15)
     return(critical_T)
 
-"""
+
 T_40 = e_plots("4e_L40.txt","40","r")
 T_60 = e_plots("4e_L60.txt","60","b")
 T_80 = e_plots("4e_L80.txt","80","g")
 T_100 = e_plots("4e_L100.txt","100","black")
 plt.show()
-"""
+
 
 
 def lin_reg():
@@ -201,4 +201,4 @@ def lin_reg():
     plt.plot(x,lin_fit[0]*x +lin_fit[1])
     plt.grid()
     plt.show()
-#lin_reg()
+lin_reg()
