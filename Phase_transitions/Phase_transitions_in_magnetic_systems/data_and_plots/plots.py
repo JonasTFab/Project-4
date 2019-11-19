@@ -80,7 +80,7 @@ def d_plots(filename,color):
     probabilities = counts/np.sum(counts)
     min_idx = np.argmin(abs(mean-sigma - unique))
     max_idx = np.argmin(abs(mean+sigma -unique))
-    print(np.sum(probabilities[min_idx:max_idx]))
+    #print(np.sum(probabilities[min_idx:max_idx]))
     x = list(filename.split('_')[3])
     b = x
     if b[0] == "r":
@@ -132,8 +132,8 @@ def e_plots(filename,L,color):
     idx = np.argmax(smoothed_h_capacity)
     idx1 = np.argmax(smoothed_susceptibility)
     critical_T = Temp[idx]
-    print(Temp[idx],'hcap',L)
-    print(Temp[idx1],'sus',L)
+    #print(Temp[idx],'hcap',L)
+    #print(Temp[idx1],'sus',L)
 
     plt.figure(1)
     ax1 = plt.subplot(211)
