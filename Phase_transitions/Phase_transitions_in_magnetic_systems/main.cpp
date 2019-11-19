@@ -165,9 +165,9 @@ arma::Mat<double> ising_model(int L, double T, arma::mat spin_matrix, int MC_cyc
       std::string msg = "The difference in analytical and numerical specific heat capacity is larger than: ";
       std::cout << msg << eps << " Difference is: " << diff_shc << std::endl;
       }
-    else if (diff_mag > eps){
-      std::string msg = "The difference in analytical and numerical average magnetization is larger than: ";
-      std::cout << msg << eps << " Difference is: " << diff_mag << std::endl;
+    else if (diff_sus > eps){
+      std::string msg = "The difference in analytical and numerical susceptibility is larger than: ";
+      std::cout << msg << eps << " Difference is: " << diff_sus << std::endl;
       }
     else{
       std::string msg = "Unit test complete! The algorithm works just fine for L=2, Thumbs up! We may now assume it works for any L.";
