@@ -80,7 +80,7 @@ def d_plots(filename,color):
     probabilities = counts/np.sum(counts)
     min_idx = np.argmin(abs(mean-sigma - unique))
     max_idx = np.argmin(abs(mean+sigma -unique))
-    print(np.sum(probabilities[min_idx:max_idx]))
+    #print(np.sum(probabilities[min_idx:max_idx]))
     x = list(filename.split('_')[3])
     b = x
     if b[0] == "r":
@@ -134,8 +134,8 @@ def e_plots(filename,L,color):
     idx = np.argmax(smoothed_h_capacity)
     idx1 = np.argmax(smoothed_susceptibility)
     critical_T = Temp[idx]
-    print(Temp[idx],'hcap',L)
-    print(Temp[idx1],'sus',L)
+    #print(Temp[idx],'hcap',L)
+    #print(Temp[idx1],'sus',L)
 
     plt.figure(1)
     ax1 = plt.subplot(211)
@@ -177,13 +177,13 @@ def e_plots(filename,L,color):
     ax4.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2),ncol = 5,fancybox=True,fontsize=15)
     return(critical_T)
 
-"""
+
 T_40 = e_plots("4e_L40.txt","40","r")
 T_60 = e_plots("4e_L60.txt","60","b")
 T_80 = e_plots("4e_L80.txt","80","g")
 T_100 = e_plots("4e_L100.txt","100","black")
 plt.show()
-"""
+
 
 
 def lin_reg():
@@ -194,11 +194,17 @@ def lin_reg():
     lin_fit = np.polyfit(Tc_vals/L_size,Tc_vals,1)
     a = lin_fit[0]
     print(lin_fit)
-    x = np.linspace(-0.01,0.055,100)
+    x = np.linspace(0,0.055,100)
     critical_T = a*L_size**(-nu)+Tc_vals
     print(critical_T)
-    plt.plot(Tc_vals/L_size,Tc_vals,"o",color = "r")
-    plt.plot(x,lin_fit[0]*x +lin_fit[1])
+
+    plt.plot(Tc_vals/L_size,Tc_vals,"o",color = "g", label = '$T_C(L)$')
+    plt.plot(x,lin_fit[0]*x +lin_fit[1],label = 'Regression')
+    plt.plot(0,2.26019167,'*',label = "$T_C(\infty)$)",color = "r",markersize = 10,linewidth = 10)
     plt.grid()
+    plt.xlabel('T/L')
+    plt.ylabel('T')
+    plt.title('Critical Temperature')
+    plt.legend(fontsize = 13)
     plt.show()
-#lin_reg()
+lin_reg()
